@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
@@ -12,7 +12,6 @@
             user-select: none;
         }
 
-        /* 动态背景层 — 始终位于最底层，全屏时依然有效 */
         .dynamic-bg {
             position: fixed;
             top: 0;
@@ -25,7 +24,7 @@
             background-repeat: no-repeat;
             filter: blur(60px) saturate(1.6);
             transform: scale(1.05);
-            transition: background-image 0.5ease;
+            transition: background-image 0.5s ease;
         }
         .bg-overlay {
             position: fixed;
@@ -53,10 +52,9 @@
             height: 100vh;
             position: relative;
             z-index: 2;
-            transition: all 0.4cubic-bezier(0.2, 0.9, 0.4, 1.1);
+            transition: all 0.4s cubic-bezier(0.2, 0.9, 0.4, 1.1);
         }
 
-        /* 网页全屏样式 */
         .player-app.web-fullscreen {
             position: fixed;
             top: 0;
@@ -84,7 +82,6 @@
             height: 100%;
         }
 
-        /* 非全屏下移动端布局显示，桌面布局隐藏 */
         .mobile-layout {
             display: flex;
             flex-direction: column;
@@ -96,7 +93,6 @@
             display: none;
         }
 
-        /* 全屏布局：单一圆角毛玻璃容器，左右分区 */
         .fullscreen-glass {
             width: 85%;
             max-width: 1400px;
@@ -110,7 +106,6 @@
             position: relative;
         }
 
-        /* 左侧区域 (MIC: 封面+信息+控制器) */
         .fs-left {
             flex: 1;
             padding: 2rem 1.5rem;
@@ -121,7 +116,6 @@
             background: transparent;
         }
 
-        /* 右侧歌词区域 — 确保可滚动，隐藏滚动条 */
         .fs-right {
             flex: 3;
             padding: 2rem 2rem 2rem 1.5rem;
@@ -151,7 +145,6 @@
             padding-bottom: 2rem;
         }
 
-        /* 封面样式 */
         .fs-cover {
             display: flex;
             justify-content: center;
@@ -174,7 +167,6 @@
             object-fit: cover;
         }
 
-        /* 歌曲信息 */
         .fs-song-meta {
             cursor: pointer;
             text-align: center;
@@ -194,7 +186,6 @@
             color: #d4cbbe;
         }
 
-        /* 控制器 */
         .fs-controls {
             display: flex;
             flex-direction: column;
@@ -251,7 +242,6 @@
             color: #fff;
         }
 
-        /* 歌词条目样式 — 字体增大 */
         .fs-lyric-item {
             font-size: 1.4rem;
             color: #f0e2cf;
@@ -292,7 +282,6 @@
         }
         .fs-interlude-dots.hidden { display: none; }
 
-        /* 响应式调整 */
         @media (max-width: 900px) {
             .fullscreen-glass { width: 95%; }
             .fs-cover-img { width: 140px; height: 140px; }
@@ -304,7 +293,6 @@
             .fs-lyrics-scroll { max-height: calc(85vh - 60px); }
         }
 
-        /* 移动端原有样式 — 同样隐藏滚动条 */
         .mobile-layout .lyrics-container {
             flex: 1;
             overflow-y: auto;
@@ -466,7 +454,6 @@
             color: #fff;
         }
 
-        /* 播放列表模态框 */
         .playlist-modal {
             position: fixed;
             top: 0;
@@ -594,13 +581,29 @@
             margin-top: 10px;
             width: 100%;
         }
+        .demo-song-btn {
+            background: rgba(236, 217, 180, 0.25);
+            border: 1px solid rgba(236, 217, 180, 0.5);
+            border-radius: 40px;
+            padding: 10px 20px;
+            color: #ecd9b4;
+            font-weight: 500;
+            cursor: pointer;
+            margin-top: 12px;
+            width: 100%;
+            text-align: center;
+            transition: 0.2s;
+        }
+        .demo-song-btn:hover {
+            background: rgba(236, 217, 180, 0.4);
+            color: #fff5e8;
+        }
     </style>
 </head>
 <body>
 <div class="dynamic-bg" id="dynamicBg"></div>
 <div class="bg-overlay" id="bgOverlay"></div>
 <div class="player-app" id="playerApp">
-    <!-- 全屏布局 (网页全屏时显示) -->
     <div class="desktop-layout" id="desktopLayout">
         <div class="fullscreen-glass">
             <div class="fs-left">
@@ -631,7 +634,6 @@
                 </div>
             </div>
             <div class="fs-right">
-                <!-- 标题改为 YinXue Music，与歌词同色 -->
                 <div class="fs-lyrics-header" style="color: #f0e2cf; opacity: 0.8;">✦ YinXue Music</div>
                 <div class="fs-lyrics-scroll" id="fullscreenLyricsScroll">
                     <div class="fs-lyrics-list" id="fullscreenLyricsList"></div>
@@ -640,7 +642,6 @@
         </div>
     </div>
 
-    <!-- 移动端常规布局 (非全屏时显示) -->
     <div class="mobile-layout" id="mobileLayout">
         <div class="lyrics-container">
             <div class="lyrics-header">✦ YinXue Music α¹²⁶</div>
@@ -676,7 +677,6 @@
     </div>
 </div>
 
-<!-- 播放列表管理器模态框 -->
 <div id="playlistManagerModal" class="playlist-modal">
     <div class="playlist-modal-content">
         <div class="playlist-modal-header">
@@ -699,20 +699,19 @@
                 <input type="file" id="modalCoverFile" accept="image/jpeg,image/png,image/webp">
             </div>
             <button class="add-song-submit" id="modalAddSongBtn">添加到播放列表</button>
+            <div class="demo-song-btn" id="demoSongBtn">🎵 一键添加示例歌曲 (男模)</div>
         </div>
     </div>
 </div>
 
 <script>
-    // ---------- 数据结构 ----------
     let playlist = [];
     let currentSongId = null;
     let audio = new Audio();
     let isPlaying = false, animFrame = null;
     let isRepeat = false;
 
-    // ---------- DOM 元素 ----------
-    // 全屏布局
+    // DOM 元素
     const fsCoverImg = document.getElementById('fullscreenCoverImg');
     const fsSongTitle = document.getElementById('fullscreenSongTitle');
     const fsArtist = document.getElementById('fullscreenArtist');
@@ -727,7 +726,6 @@
     const fsMenuBtn = document.getElementById('fullscreenMenuBtn');
     const fsLyricsList = document.getElementById('fullscreenLyricsList');
     const fsLyricsScroll = document.getElementById('fullscreenLyricsScroll');
-    // 移动端
     const mobileCoverImg = document.getElementById('mobileCoverImg');
     const mobileSongTitle = document.getElementById('mobileSongTitle');
     const mobileArtist = document.getElementById('mobileArtist');
@@ -742,7 +740,6 @@
     const mobileMenuBtn = document.getElementById('mobileMenuBtn');
     const mobileLyricsList = document.getElementById('mobileLyricsList');
     const mobileLyricsArea = document.getElementById('mobileLyricsArea');
-    // 公用
     const dynamicBg = document.getElementById('dynamicBg');
     const bgOverlay = document.getElementById('bgOverlay');
     const appContainer = document.getElementById('playerApp');
@@ -753,8 +750,8 @@
     const modalCoverFile = document.getElementById('modalCoverFile');
     const modalAddSongBtn = document.getElementById('modalAddSongBtn');
     const playlistModalList = document.getElementById('playlistModalList');
+    const demoSongBtn = document.getElementById('demoSongBtn');
 
-    // ---------- 辅助函数 ----------
     function formatTime(sec) { if(isNaN(sec)) return "0:00"; const m=Math.floor(sec/60); const s=Math.floor(sec%60); return `${m}:${s<10?'0'+s:s}`; }
 
     function parseMilliseconds(msStr) {
@@ -813,7 +810,6 @@
         img.src = src;
     }
 
-    // 歌词渲染与高亮
     let currentLyricsTimeline = [];
     let fsDomItems = [], mobileDomItems = [];
     let lastFsIdx = -1, lastMobileIdx = -1;
@@ -831,7 +827,6 @@
     let structured = new LyricsWithInterlude([]);
 
     function renderBothPanels() {
-        // 全屏渲染
         fsLyricsList.innerHTML = '';
         fsDomItems = [];
         structured.items.forEach(item=>{
@@ -853,7 +848,6 @@
                 fsDomItems.push({ el:inter, type:'interlude', start:item.start, end:item.end });
             }
         });
-        // 移动端渲染
         mobileLyricsList.innerHTML = '';
         mobileDomItems = [];
         structured.items.forEach(item=>{
@@ -890,7 +884,6 @@
     }
 
     function updateUIByPlaybackTime(currentSec) {
-        // 全屏
         fsDomItems.forEach(it=>{
             if(it.type === 'interlude'){
                 const inRange = (currentSec >= it.start && currentSec <= it.end);
@@ -912,7 +905,6 @@
             if(actEl) scrollFullscreen(actEl, fsLyricsScroll);
             lastFsIdx = activeIdx;
         }
-        // 移动端
         mobileDomItems.forEach(it=>{
             if(it.type === 'interlude'){
                 const inRange = (currentSec >= it.start && currentSec <= it.end);
@@ -955,22 +947,13 @@
     function togglePlayPause() {
         if(isPlaying) { audio.pause(); isPlaying=false; fsPlayPause.innerHTML='▶'; mobilePlayPause.innerHTML='▶'; if(animFrame) cancelAnimationFrame(animFrame); animFrame=null; }
         else {
-            // 如果没有歌曲，弹出添加菜单
-            if(!audio.src && playlist.length === 0) {
-                showPlaylistModal();
-                return;
-            }
-            // 如果有歌曲但 audio.src 为空（播放结束后被清空），重新播放最后一首
-            if(!audio.src && playlist.length > 0) {
-                playSongById(playlist[playlist.length-1].id);
-                return;
-            }
+            if(!audio.src && playlist.length === 0) { showPlaylistModal(); return; }
+            if(!audio.src && playlist.length > 0) { playSongById(playlist[playlist.length-1].id); return; }
             audio.play().then(()=>{ isPlaying=true; fsPlayPause.innerHTML='■'; mobilePlayPause.innerHTML='■'; startAnimation(); }).catch(()=>{});
         }
     }
 
     function seek(delta) { if(audio.src) audio.currentTime = Math.min(Math.max(0, audio.currentTime+delta), audio.duration); }
-
     function prevSong() { if(!playlist.length) return; let idx = playlist.findIndex(s=>s.id===currentSongId); if(idx===-1) idx=0; let newIdx = (idx-1+playlist.length)%playlist.length; playSongById(playlist[newIdx].id); }
     function nextSong() { if(!playlist.length) return; let idx = playlist.findIndex(s=>s.id===currentSongId); if(idx===-1) idx=0; let newIdx = (idx+1)%playlist.length; playSongById(playlist[newIdx].id); }
 
@@ -1050,6 +1033,115 @@
         updatePlaylistModalUI();
     }
 
+    // 一键添加示例歌曲 - 支持手动回退
+    async function addDemoSong() {
+        const basePath = '';
+        const audioUrl = `${basePath}男模.mp3`;
+        const lyricsUrl = `${basePath}男模.txt`;
+        const coverUrl = `${basePath}男模.jpg`;
+        
+        demoSongBtn.textContent = '⏳ 加载中...';
+        demoSongBtn.style.opacity = '0.7';
+        demoSongBtn.style.pointerEvents = 'none';
+        
+        let lyricsTimeline = [];
+        let songName = "男模";
+        let artist = "未知艺术家";
+        let coverDataUrl = null;
+        
+        // 尝试 fetch 歌词
+        let lyricsLoaded = false;
+        try {
+            const lyricsResponse = await fetch(lyricsUrl);
+            if (lyricsResponse.ok) {
+                const lyricsText = await lyricsResponse.text();
+                const { songName: parsedName, artistAlbum, timeline } = parseLyricsFull(lyricsText);
+                if (parsedName && parsedName !== "未知歌曲") songName = parsedName;
+                if (artistAlbum && artistAlbum !== "未知艺术家") artist = artistAlbum;
+                if (timeline && timeline.length) lyricsTimeline = timeline;
+                lyricsLoaded = true;
+            }
+        } catch (e) { console.warn(e); }
+        
+        // 如果歌词加载失败，询问用户手动选择
+        if (!lyricsLoaded) {
+            const userConfirmed = confirm('⚠️ 未找到歌词文件 (男模.txt)\n\n是否手动选择歌词文件？');
+            if (userConfirmed) {
+                const fileInput = document.createElement('input');
+                fileInput.type = 'file';
+                fileInput.accept = 'text/plain';
+                const lyricsFile = await new Promise((resolve) => {
+                    fileInput.onchange = (e) => resolve(e.target.files[0]);
+                    fileInput.click();
+                });
+                if (lyricsFile) {
+                    const text = await lyricsFile.text();
+                    const { songName: parsedName, artistAlbum, timeline } = parseLyricsFull(text);
+                    if (parsedName && parsedName !== "未知歌曲") songName = parsedName;
+                    if (artistAlbum && artistAlbum !== "未知艺术家") artist = artistAlbum;
+                    if (timeline && timeline.length) lyricsTimeline = timeline;
+                }
+            }
+        }
+        
+        // 尝试 fetch 封面
+        let coverLoaded = false;
+        try {
+            const coverResponse = await fetch(coverUrl);
+            if (coverResponse.ok) {
+                const coverBlob = await coverResponse.blob();
+                coverDataUrl = await new Promise((resolve) => {
+                    const reader = new FileReader();
+                    reader.onloadend = () => resolve(reader.result);
+                    reader.readAsDataURL(coverBlob);
+                });
+                coverLoaded = true;
+            }
+        } catch (e) { console.warn(e); }
+        
+        // 如果封面加载失败，询问用户手动选择
+        if (!coverLoaded) {
+            const userConfirmed = confirm('⚠️ 未找到封面文件 (男模.jpg)\n\n是否手动选择封面图片？');
+            if (userConfirmed) {
+                const fileInput = document.createElement('input');
+                fileInput.type = 'file';
+                fileInput.accept = 'image/jpeg,image/png,image/webp';
+                const coverFile = await new Promise((resolve) => {
+                    fileInput.onchange = (e) => resolve(e.target.files[0]);
+                    fileInput.click();
+                });
+                if (coverFile) {
+                    coverDataUrl = await new Promise((resolve) => {
+                        const reader = new FileReader();
+                        reader.onloadend = () => resolve(reader.result);
+                        reader.readAsDataURL(coverFile);
+                    });
+                }
+            }
+        }
+        
+        const coverFinal = coverDataUrl || 'data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 100 100\'%3E%3Crect width=\'100\' height=\'100\' fill=\'%232c2e3a\'/%3E%3Ctext x=\'50\' y=\'55\' font-size=\'12\' fill=\'%23cbbfaa\' text-anchor=\'middle\'%3E🎵%3C/text%3E%3C/svg%3E';
+        
+        const newSong = {
+            id: Date.now(),
+            name: songName,
+            artist: artist,
+            audioUrl: audioUrl,
+            coverUrl: coverFinal,
+            lyricsTimeline: lyricsTimeline
+        };
+        
+        playlist.push(newSong);
+        if (!currentSongId) playSongById(newSong.id);
+        updatePlaylistModalUI();
+        
+        demoSongBtn.textContent = '🎵 一键添加示例歌曲 (男模)';
+        demoSongBtn.style.opacity = '1';
+        demoSongBtn.style.pointerEvents = 'auto';
+        
+        alert(`✅ 示例歌曲已添加！\n歌名: ${songName}\n歌手: ${artist}\n歌词行数: ${lyricsTimeline.length}\n封面: ${coverDataUrl ? '已设置' : '使用默认'}`);
+    }
+
     function addNewSong(audioFile, lyricsFile, coverFile){
         if(!audioFile){ alert("请选择音频文件"); return; }
         const audioUrl = URL.createObjectURL(audioFile);
@@ -1102,7 +1194,6 @@
         closePlaylistModal();
     }
 
-    // ---------- 网页全屏切换（单击封面） ----------
     let isWebFullscreen = false;
     function toggleWebFullscreen() {
         if (!isWebFullscreen) {
@@ -1112,7 +1203,6 @@
             appContainer.classList.remove('web-fullscreen');
             isWebFullscreen = false;
         }
-        // 刷新歌词滚动区域
         setTimeout(() => {
             if (fsLyricsScroll) {
                 fsLyricsScroll.style.maxHeight = '';
@@ -1122,7 +1212,6 @@
         }, 100);
     }
 
-    // 上传封面单独处理（通过播放列表管理器的“更换专辑封面”选项）
     function uploadCoverImage() {
         const inp = document.createElement('input');
         inp.type = 'file';
@@ -1143,13 +1232,11 @@
         inp.click();
     }
 
-    // 为封面绑定单击网页全屏
     const fullscreenCover = document.getElementById('fullscreenCoverTrigger');
     const mobileCover = document.getElementById('mobileCoverTrigger');
     fullscreenCover.addEventListener('click', toggleWebFullscreen);
     mobileCover.addEventListener('click', toggleWebFullscreen);
 
-    // 其他事件绑定
     document.getElementById('fullscreenSongInfo').addEventListener('click', showPlaylistModal);
     document.getElementById('mobileSongInfo').addEventListener('click', showPlaylistModal);
     initSwipe(document.getElementById('fullscreenSongInfo'));
@@ -1167,37 +1254,31 @@
     mobileMenuBtn.addEventListener('click', showPlaylistModal);
     closePlaylistModalBtn.addEventListener('click', closePlaylistModal);
     modalAddSongBtn.addEventListener('click', handleModalAddSong);
+    demoSongBtn.addEventListener('click', addDemoSong);
     window.addEventListener('click', (e)=>{ if(e.target===playlistModal) closePlaylistModal(); });
     fsProgressBg.addEventListener('click', (e)=>{ if(!audio.duration) return; const rect = fsProgressBg.getBoundingClientRect(); let percent = (e.clientX-rect.left)/rect.width; percent = Math.min(1,Math.max(0,percent)); audio.currentTime = percent*audio.duration; updateProgressAndTime(); });
     mobileProgressBg.addEventListener('click', (e)=>{ if(!audio.duration) return; const rect = mobileProgressBg.getBoundingClientRect(); let percent = (e.clientX-rect.left)/rect.width; percent = Math.min(1,Math.max(0,percent)); audio.currentTime = percent*audio.duration; updateProgressAndTime(); });
     
-    // 修复播放结束逻辑：不在 isRepeat 时自动暂停，点击播放按钮重新播放最后一首
     audio.addEventListener('ended', () => {
         if (isRepeat && currentSongId) {
-            // 单曲循环：重新播放当前歌曲
             audio.currentTime = 0;
             audio.play().catch(() => {});
         } else if (playlist.length) {
-            // 列表播放结束后：自动暂停并清空当前 src，方便点击播放按钮重新播放最后一首
-            const currentIdx = playlist.findIndex(s => s.id === currentSongId);
+            const currentIdx = playlist.findIndex( => .id === currentSongId);
             if (currentIdx === playlist.length - 1) {
-                // 最后一首播放结束，停止播放，不清空歌曲信息但清空 audio.src
                 audio.pause();
                 isPlaying = false;
                 fsPlayPause.innerHTML = '▶';
                 mobilePlayPause.innerHTML = '▶';
                 if (animFrame) cancelAnimationFrame(animFrame);
                 animFrame = null;
-                // 保留 audio.src 不撤销，或者撤销？为了方便下次播放，保留 src 但设置 currentTime 为0？我们选择保留 src 且 currentTime=0 并暂停
                 audio.currentTime = 0;
             } else {
-                // 还有下一首，自动播放下一首
-                let idx = playlist.findIndex(s => s.id === currentSongId);
+                let idx = playlist.findIndex( => .id === currentSongId);
                 let nextIdx = (idx + 1) % playlist.length;
                 playSongById(playlist[nextIdx].id);
             }
         } else {
-            // 无歌曲列表
             audio.pause();
             isPlaying = false;
             fsPlayPause.innerHTML = '▶';
@@ -1209,7 +1290,6 @@
     
     audio.addEventListener('timeupdate', () => updateUIByPlaybackTime(audio.currentTime));
 
-    // 初始化
     renderBothPanels();
     updateBackgroundFromCover(fsCoverImg.src);
     startAnimation();
