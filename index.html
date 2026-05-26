@@ -1264,7 +1264,7 @@
             audio.currentTime = 0;
             audio.play().catch(() => {});
         } else if (playlist.length) {
-            const currentIdx = playlist.findIndex( => .id === currentSongId);
+            const currentIdx = playlist.findIndex(s => s.id === currentSongId);
             if (currentIdx === playlist.length - 1) {
                 audio.pause();
                 isPlaying = false;
@@ -1274,7 +1274,7 @@
                 animFrame = null;
                 audio.currentTime = 0;
             } else {
-                let idx = playlist.findIndex( => .id === currentSongId);
+                let idx = playlist.findIndex(s => s.id === currentSongId);
                 let nextIdx = (idx + 1) % playlist.length;
                 playSongById(playlist[nextIdx].id);
             }
