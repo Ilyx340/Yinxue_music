@@ -875,7 +875,7 @@
         if(!activeEl || !container) return;
         const containerRect = container.getBoundingClientRect();
         const elementRect = activeEl.getBoundingClientRect();
-        const targetCenterY = containerRect.top + containerRect.height / 2 - 300;
+        const targetCenterY = containerRect.top + containerRect.height / 2 - 150;
         const elementCenterY = elementRect.top + elementRect.height / 2;
         const scrollOffset = elementCenterY - targetCenterY;
         container.scrollBy({ top: scrollOffset, behavior: 'smooth' });
