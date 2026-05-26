@@ -24,7 +24,7 @@
             background-repeat: no-repeat;
             filter: blur(60px) saturate(1.6);
             transform: scale(1.05);
-            transition: background-image 0.5s ease;
+            transition: background-image 0.5 ease;
         }
         .bg-overlay {
             position: fixed;
@@ -52,7 +52,7 @@
             height: 100vh;
             position: relative;
             z-index: 2;
-            transition: all 0.4s cubic-bezier(0.2, 0.9, 0.4, 1.1);
+            transition: all 0.4 cubic-bezier(0.2, 0.9, 0.4, 1.1);
         }
 
         .player-app.web-fullscreen {
@@ -841,7 +841,7 @@
             } else {
                 const inter = document.createElement('div');
                 inter.className = 'fs-interlude-dots hidden';
-                inter.innerHTML = `<div class="fs-dot"></div><div class="fs-dot"></div><div class="fs-dot"></div><span style="margin-left:6px;font-size:0.7rem;">· 间奏 ·</span>`;
+                inter.innerHTML = `<div class="fs-dot"></div><div class="fs-dot"></div><div class="fs-dot"></div><span style="margin-left:6px;font-size:0.7rem;">·  ·</span>`;
                 inter.setAttribute('data-start',item.start);
                 inter.setAttribute('data-end',item.end);
                 fsLyricsList.appendChild(inter);
@@ -862,7 +862,7 @@
             } else {
                 const inter = document.createElement('div');
                 inter.className = 'interlude-dots hidden';
-                inter.innerHTML = `<div class="dot"></div><div class="dot"></div><div class="dot"></div><span style="margin-left:6px;font-size:0.7rem;">· 间奏 ·</span>`;
+                inter.innerHTML = `<div class="dot"></div><div class="dot"></div><div class="dot"></div><span style="margin-left:6px;font-size:0.7rem;">·  ·</span>`;
                 inter.setAttribute('data-start',item.start);
                 inter.setAttribute('data-end',item.end);
                 mobileLyricsList.appendChild(inter);
@@ -875,7 +875,7 @@
         if(!activeEl || !container) return;
         const containerRect = container.getBoundingClientRect();
         const elementRect = activeEl.getBoundingClientRect();
-        const targetCenterY = containerRect.top + containerRect.height / 2 - 150;
+        const targetCenterY = containerRect.top + containerRect.height / 2 - 70;
         const elementCenterY = elementRect.top + elementRect.height / 2;
         const scrollOffset = elementCenterY - targetCenterY;
         container.scrollBy({ top: scrollOffset, behavior: 'smooth' });
