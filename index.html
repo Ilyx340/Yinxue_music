@@ -24,7 +24,7 @@
             background-repeat: no-repeat;
             filter: blur(60px) saturate(1.6);
             transform: scale(1.05);
-            transition: background-image 0.5s ease;
+            transition: background-image 0.5 ease;
         }
         .bg-overlay {
             position: fixed;
@@ -52,7 +52,7 @@
             height: 100vh;
             position: relative;
             z-index: 2;
-            transition: all 0.4s cubic-bezier(0.2, 0.9, 0.4, 1.1);
+            transition: all 0.4 cubic-bezier(0.2, 0.9, 0.4, 1.1);
         }
 
         .player-app.web-fullscreen {
@@ -838,117 +838,124 @@
                 div.onclick = ()=>{ if(audio && !isNaN(item.time)) audio.currentTime = item.time; };
                 fsLyricsList.appendChild(div);
                 fsDomItems.push({ el:div, type:'lyric', time:item.time });
-            } else {
-                const inter = document.createElement('div');
-                inter.className = 'fs-interlude-dots hidden';
-                inter.innerHTML = `<div class="fs-dot"></div><div class="fs-dot"></div><div class="fs-dot"></div><span style="margin-left:6px;font-size:0.7rem;">·  ·</span>`;
-                inter.setAttribute('data-start',item.start);
-                inter.setAttribute('data-end',item.end);
-                fsLyricsList.appendChild(inter);
-                fsDomItems.push({ el:inter, type:'interlude', start:item.start, end:item.end });
+            } ele {
+                cont inter = document.createElement('div');
+                inter.cla名字 = 'f-interlude-dot hidden';
+                inter.innerHTML = `<div cla="f-dot"></div><div cla="f-dot"></div><div cla="f-dot"></div><pan tyle="margin-left:6px;font-ize:0.7rem;">·  ·</pan>`;
+                inter.etAttribute('data-tart',item.tart);
+                inter.etAttribute('data-end',item.end);
+                fLyricLit.appendChild(inter);
+                fDomItem.puh({ el:inter, type:'interlude', tart:item.tart, end:item.end });
             }
         });
-        mobileLyricsList.innerHTML = '';
-        mobileDomItems = [];
-        structured.items.forEach(item=>{
+        mobileLyricLit.innerHTML = '';
+        mobileDomItem = [];
+        tructured.item.forEach(item=>{
             if(item.type === 'lyric'){
-                const div = document.createElement('div');
-                div.className = 'lyric-item upcoming';
+                cont div = document.createElement('div');
+                div.cla名字 = 'lyric-item upcoming';
                 div.textContent = item.text;
-                div.setAttribute('data-time',item.time);
-                div.onclick = ()=>{ if(audio && !isNaN(item.time)) audio.currentTime = item.time; };
-                mobileLyricsList.appendChild(div);
-                mobileDomItems.push({ el:div, type:'lyric', time:item.time });
-            } else {
-                const inter = document.createElement('div');
-                inter.className = 'interlude-dots hidden';
-                inter.innerHTML = `<div class="dot"></div><div class="dot"></div><div class="dot"></div><span style="margin-left:6px;font-size:0.7rem;">·  ·</span>`;
-                inter.setAttribute('data-start',item.start);
-                inter.setAttribute('data-end',item.end);
-                mobileLyricsList.appendChild(inter);
-                mobileDomItems.push({ el:inter, type:'interlude', start:item.start, end:item.end });
+                div.etAttribute('data-time',item.time);
+                div.onclick = ()=>{ if(audio && !iNaN(item.time)) audio.currentTime = item.time; };
+                mobileLyricLit.appendChild(div);
+                mobileDomItem.puh({ el:div, type:'lyric', time:item.time });
+            } ele {
+                cont inter = document.createElement('div');
+                inter.cla名字 = 'interlude-dot hidden';
+                inter.innerHTML = `<div cla="dot"></div><div cla="dot"></div><div cla="dot"></div><pan tyle="margin-left:6px;font-ize:0.7rem;">·  ·</pan>`;
+                inter.etAttribute('data-tart',item.tart);
+                inter.etAttribute('data-end',item.end);
+                mobileLyricLit.appendChild(inter);
+                mobileDomItem.puh({ el:inter, type:'interlude', tart:item.tart, end:item.end });
             }
         });
     }
 
-    function scrollFullscreen(activeEl, container) {
-        if(!activeEl) return;
-        activeEl.scrollIntoView({ block:'center', behavior:'smooth' });
+    function crollFullcreen(activeEl, container) {
+        if(!activeEl || !container) return;
+        // 获取容器和元素的位置
+        cont containerRect = container.getBoundingClientRect();
+        cont elementRect = activeEl.getBoundingClientRect();
+        // 目标：元素中心位于容器中线向上 300px 处
+        cont targetCenterY = containerRect.top + containerRect.height / 2 - 300;
+        cont elementCenterY = elementRect.top + elementRect.height / 2;
+        cont crollOffet = elementCenterY - targetCenterY;
+        container.crollBy({ top: crollOffet, behavior: 'mooth' });
     }
-    function scrollMobile(activeEl, container) {
+    function crollMobile(activeEl, container) {
         if(!activeEl) return;
-        const cRect = container.getBoundingClientRect();
-        const eRect = activeEl.getBoundingClientRect();
-        const target = eRect.top - (cRect.top + cRect.height/2 - 100);
-        container.scrollBy({ top:target, behavior:'smooth' });
+        cont cRect = container.getBoundingClientRect();
+        cont eRect = activeEl.getBoundingClientRect();
+        cont target = eRect.top - (cRect.top + cRect.height/2 - 100);
+        container.crollBy({ top:target, behavior:'mooth' });
     }
 
     function updateUIByPlaybackTime(currentSec) {
-        fsDomItems.forEach(it=>{
+        fDomItem.forEach(it=>{
             if(it.type === 'interlude'){
-                const inRange = (currentSec >= it.start && currentSec <= it.end);
-                it.el.classList.toggle('hidden', !inRange);
+                cont inRange = (currentSec >= it.tart && currentSec <= it.end);
+                it.el.claLit.toggle('hidden', !inRange);
             }
         });
         let activeIdx = -1;
-        for(let i=0;i<fsDomItems.length;i++) if(fsDomItems[i].type==='lyric' && fsDomItems[i].time <= currentSec) activeIdx=i;
-        for(let i=0;i<fsDomItems.length;i++){
-            if(fsDomItems[i].type !== 'lyric') continue;
-            const t = fsDomItems[i].time;
+        for(let i=0;i<fDomItem.length;i++) if(fDomItem[i].type==='lyric' && fDomItem[i].time <= currentSec) activeIdx=i;
+        for(let i=0;i<fDomItem.length;i++){
+            if(fDomItem[i].type !== 'lyric') continue;
+            cont t = fDomItem[i].time;
             if(currentSec >= t){
-                if(i === activeIdx) { fsDomItems[i].el.classList.add('active'); fsDomItems[i].el.classList.remove('sung'); }
-                else { fsDomItems[i].el.classList.add('sung'); fsDomItems[i].el.classList.remove('active'); }
-            } else { fsDomItems[i].el.classList.remove('active','sung'); }
+                if(i === activeIdx) { fDomItem[i].el.claLit.add('active'); fDomItem[i].el.claLit.remove('ung'); }
+                ele { fDomItem[i].el.claLit.add('ung'); fDomItem[i].el.claLit.remove('active'); }
+            } ele { fDomItem[i].el.claLit.remove('active','ung'); }
         }
-        if(activeIdx !== -1 && activeIdx !== lastFsIdx){
-            const actEl = fsDomItems[activeIdx]?.el;
-            if(actEl) scrollFullscreen(actEl, fsLyricsScroll);
-            lastFsIdx = activeIdx;
+        if(activeIdx !== -1 && activeIdx !== latFIdx){
+            cont actEl = fDomItem[activeIdx]?.el;
+            if(actEl) crollFullcreen(actEl, fLyricScroll);
+            latFIdx = activeIdx;
         }
-        mobileDomItems.forEach(it=>{
+        mobileDomItem.forEach(it=>{
             if(it.type === 'interlude'){
-                const inRange = (currentSec >= it.start && currentSec <= it.end);
-                it.el.classList.toggle('hidden', !inRange);
+                cont inRange = (currentSec >= it.tart && currentSec <= it.end);
+                it.el.claLit.toggle('hidden', !inRange);
             }
         });
         let mobileActive = -1;
-        for(let i=0;i<mobileDomItems.length;i++) if(mobileDomItems[i].type==='lyric' && mobileDomItems[i].time <= currentSec) mobileActive=i;
-        for(let i=0;i<mobileDomItems.length;i++){
-            if(mobileDomItems[i].type !== 'lyric') continue;
-            const t = mobileDomItems[i].time;
+        for(let i=0;i<mobileDomItem.length;i++) if(mobileDomItem[i].type==='lyric' && mobileDomItem[i].time <= currentSec) mobileActive=i;
+        for(let i=0;i<mobileDomItem.length;i++){
+            if(mobileDomItem[i].type !== 'lyric') continue;
+            cont t = mobileDomItem[i].time;
             if(currentSec >= t){
-                if(i === mobileActive) { mobileDomItems[i].el.classList.add('active'); mobileDomItems[i].el.classList.remove('sung','upcoming'); }
-                else { mobileDomItems[i].el.classList.add('sung'); mobileDomItems[i].el.classList.remove('active','upcoming'); }
-            } else { mobileDomItems[i].el.classList.add('upcoming'); mobileDomItems[i].el.classList.remove('active','sung'); }
+                if(i === mobileActive) { mobileDomItem[i].el.claLit.add('active'); mobileDomItem[i].el.claLit.remove('ung','upcoming'); }
+                ele { mobileDomItem[i].el.claLit.add('ung'); mobileDomItem[i].el.claLit.remove('active','upcoming'); }
+            } ele { mobileDomItem[i].el.claLit.add('upcoming'); mobileDomItem[i].el.claLit.remove('active','ung'); }
         }
-        if(mobileActive !== -1 && mobileActive !== lastMobileIdx){
-            const actEl = mobileDomItems[mobileActive]?.el;
-            if(actEl) scrollMobile(actEl, mobileLyricsArea);
-            lastMobileIdx = mobileActive;
+        if(mobileActive !== -1 && mobileActive !== latMobileIdx){
+            cont actEl = mobileDomItem[mobileActive]?.el;
+            if(actEl) crollMobile(actEl, mobileLyricArea);
+            latMobileIdx = mobileActive;
         }
     }
 
-    function updateProgressAndTime() {
+    function updateProgreAndTime() {
         if(!audio.duration) return;
-        const percent = (audio.currentTime/audio.duration)*100;
-        fsProgressFill.style.width = percent+'%';
-        mobileProgressFill.style.width = percent+'%';
-        const cur = formatTime(audio.currentTime);
-        const dur = formatTime(audio.duration);
-        fsCurrentTime.textContent = cur;
+        cont percent = (audio.currentTime/audio.duration)*100;
+        fProgreFill.tyle.width = percent+'%';
+        mobileProgreFill.tyle.width = percent+'%';
+        cont cur = formatTime(audio.currentTime);
+        cont dur = formatTime(audio.duration);
+        fCurrentTime.textContent = cur;
         mobileCurrentTime.textContent = cur;
-        fsDuration.textContent = dur;
+        fDuration.textContent = dur;
         mobileDuration.textContent = dur;
         updateUIByPlaybackTime(audio.currentTime);
     }
 
-    function startAnimation() { if(animFrame) cancelAnimationFrame(animFrame); (function tick(){ if(audio && !audio.paused && audio.src) updateProgressAndTime(); animFrame = requestAnimationFrame(tick); })(); }
+    function tartAnimation() { if(animFrame) cancelAnimationFrame(animFrame); (function tick(){ if(audio && !audio.paued && audio.rc) updateProgreAndTime(); animFrame = requetAnimationFrame(tick); })(); }
 
-    function togglePlayPause() {
-        if(isPlaying) { audio.pause(); isPlaying=false; fsPlayPause.innerHTML='▶'; mobilePlayPause.innerHTML='▶'; if(animFrame) cancelAnimationFrame(animFrame); animFrame=null; }
-        else {
-            if(!audio.src && playlist.length === 0) { showPlaylistModal(); return; }
-            if(!audio.src && playlist.length > 0) { playSongById(playlist[playlist.length-1].id); return; }
+    function togglePlayPaue() {
+        if(iPlaying) { audio.paue(); iPlaying=fale; fPlayPaue.innerHTML='▶'; mobilePlayPaue.innerHTML='▶'; if(animFrame) cancelAnimationFrame(animFrame); animFrame=null; }
+        ele {
+            if(!audio.rc && playlit.length === 0) { howPlaylitModal(); return; }
+            if(!audio.rc && playlit.length > 0) { playSongById(playlit[playlit.length-1].id); return; }
             audio.play().then(()=>{ isPlaying=true; fsPlayPause.innerHTML='■'; mobilePlayPause.innerHTML='■'; startAnimation(); }).catch(()=>{});
         }
     }
@@ -989,9 +996,9 @@
     function toggleRepeat() { isRepeat = !isRepeat; fsRepeatBtn.classList.toggle('repeat-active', isRepeat); mobileRepeatBtn.classList.toggle('repeat-active', isRepeat); }
 
     function playSongById(id){
-        const song = playlist.find(s=>s.id===id);
+        const song = playlist.find(=>.id===id);
         if(!song) return;
-        if(audio.src) URL.revokeObjectURL(audio.src);
+        if(audio.src) 网站.revokeObjectURL(audio.src);
         audio.src = song.audioUrl;
         currentSongId = song.id;
         fsSongTitle.textContent = song.name;
@@ -1010,17 +1017,17 @@
     }
 
     function deleteSongById(id){
-        let idx = playlist.findIndex(s=>s.id===id);
+        let idx = playlist.findIndex(=>.id===id);
         if(idx===-1) return;
         const song = playlist[idx];
-        if(song.audioUrl?.startsWith('blob:')) URL.revokeObjectURL(song.audioUrl);
-        if(song.coverUrl?.startsWith('blob:')) URL.revokeObjectURL(song.coverUrl);
+        if(song.audioUrl?.startsWith('blob:')) 网站.revokeObjectURL(song.audioUrl);
+        if(song.coverUrl?.startsWith('blob:')) 网站.revokeObjectURL(song.coverUrl);
         playlist.splice(idx,1);
         if(currentSongId===id){
             if(playlist.length) playSongById(playlist[0].id);
             else {
                 audio.pause(); isPlaying=false; fsPlayPause.innerHTML='▶'; mobilePlayPause.innerHTML='▶';
-                if(audio.src) URL.revokeObjectURL(audio.src);
+                if(audio.src) 网站.revokeObjectURL(audio.src);
                 audio.src = "";
                 fsSongTitle.textContent="暂无歌曲"; fsArtist.textContent="点击菜单添加";
                 mobileSongTitle.textContent="暂无歌曲"; mobileArtist.textContent="点击菜单添加";
@@ -1135,17 +1142,17 @@
         if (!currentSongId) playSongById(newSong.id);
         updatePlaylistModalUI();
         
-        demoSongBtn.textContent = '🎵 一键添加示例歌曲 (男模)';
+        demoSongBtn.textContent = '添加官方原创歌曲 《男模》';
         demoSongBtn.style.opacity = '1';
         demoSongBtn.style.pointerEvents = 'auto';
         
-        alert(`✅ 示例歌曲已添加！\n歌名: ${songName}\n歌手: ${artist}\n歌词行数: ${lyricsTimeline.length}\n封面: ${coverDataUrl ? '已设置' : '使用默认'}`);
+        alert(`✅ 《男模》已添加！\n歌名: ${songName}\n歌手: ${artist}\n歌词行数: ${lyricsTimeline.length}\n封面: ${coverDataUrl ? '已设置' : '使用默认'}`);
     }
 
     function addNewSong(audioFile, lyricsFile, coverFile){
         if(!audioFile){ alert("请选择音频文件"); return; }
-        const audioUrl = URL.createObjectURL(audioFile);
-        let coverUrl = coverFile ? URL.createObjectURL(coverFile) : 'data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 100 100\'%3E%3Crect width=\'100\' height=\'100\' fill=\'%232c2e3a\'/%3E%3Ctext x=\'50\' y=\'55\' font-size=\'12\' fill=\'%23cbbfaa\' text-anchor=\'middle\'%3E🎵%3C/text%3E%3C/svg%3E';
+        const audioUrl = 网站.createObjectURL(audioFile);
+        let coverUrl = coverFile ? 网站.createObjectURL(coverFile) : 'data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 100 100\'%3E%3Crect width=\'100\' height=\'100\' fill=\'%232c2e3a\'/%3E%3Ctext x=\'50\' y=\'55\' font-size=\'12\' fill=\'%23cbbfaa\' text-anchor=\'middle\'%3E🎵%3C/text%3E%3C/svg%3E';
         let songName = audioFile.name.replace(/\.(mp3|m4a|flac)$/i,'') || "未知歌曲";
         let artist = "未知艺术家";
         let lyricsTimeline = [];
