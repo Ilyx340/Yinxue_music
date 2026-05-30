@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, view-fit=cover, user-scalable=no">
-    <title>YinXue Music 网页版播放器 </title>
+    <title>YinXue Music 网页版播放器</title>
     <style>
         * {
             margin: 0;
@@ -587,31 +587,36 @@
             color: white;
             font-size: 0.9rem;
         }
+        /* 垂直滑块布局 */
         .eq-grid {
             display: flex;
-            flex-direction: column;
-            gap: 16px;
-            margin-bottom: 20px;
-        }
-        .eq-row {
-            display: flex;
-            align-items: center;
+            flex-wrap: wrap;
+            justify-content: space-between;
             gap: 16px;
         }
-        .eq-row .eq-label {
-            width: 70px;
-            font-size: 0.85rem;
-            color: #cfc3ae;
-        }
-        .eq-row input {
+        .eq-item {
             flex: 1;
-            height: 4px;
-            -webkit-appearance: none;
+            min-width: 50px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+        }
+        .eq-label {
+            font-size: 0.75rem;
+            color: #ecd9b4;
+            text-align: center;
+        }
+        /* 垂直滑块样式 */
+        .eq-slider-vertical {
+            -webkit-appearance: slider-vertical;
+            width: 6px;
+            height: 100px;
             background: rgba(236,217,180,0.3);
             border-radius: 10px;
-            outline: none;
+            cursor: pointer;
         }
-        .eq-row input::-webkit-slider-thumb {
+        .eq-slider-vertical::-webkit-slider-thumb {
             -webkit-appearance: none;
             width: 14px;
             height: 14px;
@@ -619,10 +624,8 @@
             background: #ecd9b4;
             cursor: pointer;
         }
-        .eq-row .eq-value {
-            width: 35px;
-            text-align: right;
-            font-size: 0.8rem;
+        .eq-value {
+            font-size: 0.7rem;
             color: #ecd9b4;
         }
         .preset-buttons {
@@ -1102,8 +1105,8 @@
         const container = document.getElementById('eqGrid');
         container.innerHTML = '';
         for (let i=0; i<eqFreqs.length; i++) {
-            const row = document.createElement('div');
-            row.className = 'eq-row';
+            const itemDiv = document.createElement('div');
+            itemDiv.className = 'eq-item';
             const label = document.createElement('div');
             label.className = 'eq-label';
             label.innerText = eqFreqs[i] + 'Hz';
@@ -1113,6 +1116,10 @@
             slider.max = 12;
             slider.step = 1;
             slider.value = eqValues[i];
+            slider.classList.add('eq-slider-vertical');
+            // 垂直滑块属性
+            slider.style.height = '100px';
+            slider.style.width = '6px';
             const valueSpan = document.createElement('span');
             valueSpan.className = 'eq-value';
             valueSpan.innerText = eqValues[i];
@@ -1122,10 +1129,10 @@
                 applyEQ();
                 saveSettings();
             })(i));
-            row.appendChild(label);
-            row.appendChild(slider);
-            row.appendChild(valueSpan);
-            container.appendChild(row);
+            itemDiv.appendChild(label);
+            itemDiv.appendChild(slider);
+            itemDiv.appendChild(valueSpan);
+            container.appendChild(itemDiv);
             eqSliders.push(slider);
             eqValuesDisplay.push(valueSpan);
         }
@@ -1249,7 +1256,12 @@
         }
         if(activeIdx !== -1 && activeIdx !== lastFsIdx) {
             const actEl = fsDomItems[activeIdx]?.el;
-            if(actEl) actEl.scrollIntoView({ block: 'center', behavior: 'smooth' });
+            if(actEl && fsLyricsScroll) {
+                const containerRect = fsLyricsScroll.getBoundingClientRect();
+                const elementRect = actEl.getBoundingClientRect();
+                const offset = elementRect.top - (containerRect.top + containerRect.height / 2 - userSettings.lyricOffset);
+                fsLyricsScroll.scrollBy({ top: offset, behavior: 'smooth' });
+            }
             lastFsIdx = activeIdx;
         }
         mobileDomItems.forEach(it => { if(it.type === 'interlude') { const inRange = (currentSec >= it.start && currentSec <= it.end); it.el.classList.toggle('hidden', !inRange); } });
