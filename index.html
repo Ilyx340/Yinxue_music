@@ -1089,7 +1089,7 @@
         trebleBoost: [0,0,0,0,2,4,5,6],
         bassCut: [-4,-3,-2,0,0,0,0,0],
         trebleCut: [0,0,0,0,-2,-3,-4,-5],
-        guitar: [3,2,1,2,3,4,3,2]
+        guitar: [3,2,1,2,3,4,3,2],
         vocalClear: [-11, -9, -2, 12, -12, 12, 4, 9]
     };
     function applyPreset(name) {
@@ -1239,7 +1239,7 @@
                 else mobDiv.innerHTML = `<span class="lyric-text-wrapper"><span class="lyric-text">${escapeHtml(item.text)}</span></span>${mobSingerHtml}`;
                 mobileLyricsList.appendChild(mobDiv);
                 mobileDomItems.push({ el: mobDiv, type: 'lyric', time: item.time });
-            } } else if (item.type === 'interlude') {
+            } else if (item.type === 'interlude') {
     // 根据下一句的对齐方式决定呼吸点位置
     let fsDotClass = 'fs-interlude-dots hidden';
     let mobDotClass = 'interlude-dots hidden';
