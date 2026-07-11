@@ -50,12 +50,14 @@ function parseLyricsFull(content) {
 // ---------- Web Audio 均衡器 (8段) ----------
 let audioCtx = null,
     sourceNode = null,
-    gainNode = null;
+    gainNode = null,
+    analyserNode = null;
 let filters = [];
 let surroundEnabled = false;
 let pannerNode = null;
 let surroundAnim = null;
 let surroundTime = 0;
+let beatAnimationId = null;
 
 const eqFreqs = [60, 150, 400, 1000, 2400, 6000, 10000, 16000];
 let eqValues = [0, 0, 0, 0, 0, 0, 0, 0];
@@ -64,6 +66,8 @@ function initAudioContext() {
     if (!audioCtx && window.AudioContext) {
         audioCtx = new(window.AudioContext || window.webkitAudioContext)();
         gainNode = audioCtx.createGain();
+        analyserNode = audioCtx.createAnalyser();
+        analyserNode.fftSize = 256;
         for (let i = 0; i < eqFreqs.length; i++) {
             let filter = audioCtx.createBiquadFilter();
             filter.type = 'peaking';
@@ -77,7 +81,8 @@ function initAudioContext() {
             for (let i = 1; i < filters.length; i++) {
                 filters[i - 1].connect(filters[i]);
             }
-            filters[filters.length - 1].connect(gainNode);
+            filters[filters.length - 1].connect(analyserNode);
+            analyserNode.connect(gainNode);
         } else {
             gainNode.connect(audioCtx.destination);
         }
@@ -250,7 +255,7 @@ let isPlaying = false,
 let audio = new Audio();
 let userSettings = {
     volume: 80,
-    lyricFontSize: 18,
+    lyricFontSize: 22,
     lyricOffset: 80,
     renderQuality: "high",
     idleTimeout: 0,
@@ -457,16 +462,10 @@ function updateUIByPlaybackTime(currentSec) {
             el.style.opacity = '';
             return;
         }
-        // 第一行歌词不模糊
-        if (idx === 0) {
-            el.style.filter = 'none';
-            el.style.opacity = '';
-            return;
-        }
-        // 计算与当前行的距离
+        // 根据与当前播放行的距离计算模糊程度
         const distance = fsActiveIdx >= 0 ? Math.abs(idx - fsActiveIdx) : 999;
-        // 根据距离计算模糊程度（当前行和下一行不模糊）
-        if (distance <= 1) {
+        // 当前播放的歌词不模糊
+        if (distance === 0) {
             el.style.filter = 'none';
             el.style.opacity = '';
         } else {
@@ -533,16 +532,10 @@ function updateUIByPlaybackTime(currentSec) {
             el.style.opacity = '';
             return;
         }
-        // 第一行歌词不模糊
-        if (idx === 0) {
-            el.style.filter = 'none';
-            el.style.opacity = '';
-            return;
-        }
-        // 计算与当前行的距离
+        // 根据与当前播放行的距离计算模糊程度
         const distance = mobileActiveIdx >= 0 ? Math.abs(idx - mobileActiveIdx) : 999;
-        // 根据距离计算模糊程度（当前行和下一行不模糊）
-        if (distance <= 1) {
+        // 当前播放的歌词不模糊
+        if (distance === 0) {
             el.style.filter = 'none';
             el.style.opacity = '';
         } else {
@@ -641,13 +634,15 @@ function togglePlayPause() {
         mobilePlayPause.innerHTML = PLAY_ICON;
         if (animFrame) cancelAnimationFrame(animFrame);
         animFrame = null;
+        stopBeatAnimation();
     } else {
         if (!audio.src && playlist.length === 0) { showPlaylistModal(); return; }
         if (!audio.src && playlist.length > 0) { playSongById(playlist[playlist.length - 1].id); return; }
         audio.play().then(() => { isPlaying = true;
             fsPlayPause.innerHTML = PAUSE_ICON;
             mobilePlayPause.innerHTML = PAUSE_ICON;
-            startAnimation(); }).catch(() => {});
+            startAnimation();
+            startBeatAnimation(); }).catch(() => {});
     }
 }
 
@@ -679,6 +674,28 @@ function playSongById(id) {
     updateBackgroundFromCover(song.coverUrl);
     currentLyricsTimeline = song.lyricsTimeline || [];
     renderBothPanels();
+    
+    // 设置浏览器原生媒体控件元数据
+    if ('mediaSession' in navigator) {
+        navigator.mediaSession.metadata = new MediaMetadata({
+            title: song.name,
+            artist: song.artist,
+            artwork: [
+                { src: song.coverUrl, sizes: '96x96', type: 'image/jpeg' },
+                { src: song.coverUrl, sizes: '128x128', type: 'image/jpeg' },
+                { src: song.coverUrl, sizes: '192x192', type: 'image/jpeg' },
+                { src: song.coverUrl, sizes: '256x256', type: 'image/jpeg' },
+                { src: song.coverUrl, sizes: '384x384', type: 'image/jpeg' },
+                { src: song.coverUrl, sizes: '512x512', type: 'image/jpeg' }
+            ]
+        });
+        
+        // 设置媒体会话操作
+        navigator.mediaSession.setActionHandler('play', () => audio.play());
+        navigator.mediaSession.setActionHandler('pause', () => audio.pause());
+        navigator.mediaSession.setActionHandler('previoustrack', prevSong);
+        navigator.mediaSession.setActionHandler('nexttrack', nextSong);
+    }
     audio.load();
     if (!audioCtx) initAudioContext();
     if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
@@ -705,7 +722,8 @@ function playSongById(id) {
     audio.play().then(() => { isPlaying = true;
         fsPlayPause.innerHTML = PAUSE_ICON;
         mobilePlayPause.innerHTML = PAUSE_ICON;
-        startAnimation(); }).catch(() => {});
+        startAnimation();
+        startBeatAnimation(); }).catch(() => {});
     updatePlaylistModalUI();
     onUserInteraction();
 }
@@ -1013,6 +1031,12 @@ audio.addEventListener('timeupdate', () => updateUIByPlaybackTime(audio.currentT
 window.addEventListener('click', onUserInteraction);
 window.addEventListener('touchstart', onUserInteraction);
 window.addEventListener('mousemove', onUserInteraction);
+window.addEventListener('keydown', (e) => {
+    if (e.code === 'Space') {
+        e.preventDefault();
+        togglePlayPause();
+    }
+});
 
 // 滚动事件处理 - 取消模糊效果和自动滚动，5秒后恢复
 function handleScroll() {
@@ -1107,3 +1131,95 @@ document.querySelectorAll('.preset-btn').forEach(btn => {
         else applyPreset(preset);
     });
 });
+
+// ---------- 音频节奏可视化效果 ----------
+function startBeatAnimation() {
+    if (beatAnimationId) cancelAnimationFrame(beatAnimationId);
+    if (!analyserNode || !audioCtx || !isPlaying) return;
+
+    const frequencyData = new Uint8Array(analyserNode.frequencyBinCount);
+    const auras = document.querySelectorAll('.glow');
+    const bgOverlay = document.getElementById('bgOverlay');
+    const dynamicBg = document.getElementById('dynamicBg');
+    
+    let lastBeatTime = 0;
+    let beatIntensity = 0;
+    let smoothIntensity = 0;
+
+    function animate() {
+        if (!isPlaying || !analyserNode) return;
+
+        analyserNode.getByteFrequencyData(frequencyData);
+        
+        // 计算低频能量（鼓点）
+        let lowEnergy = 0;
+        for (let i = 0; i < frequencyData.length * 0.15; i++) {
+            lowEnergy += frequencyData[i];
+        }
+        lowEnergy /= frequencyData.length * 0.15;
+        
+        // 计算中频能量（人声/旋律）
+        let midEnergy = 0;
+        for (let i = Math.floor(frequencyData.length * 0.15); i < frequencyData.length * 0.5; i++) {
+            midEnergy += frequencyData[i];
+        }
+        midEnergy /= frequencyData.length * 0.35;
+
+        // 检测节拍
+        const currentTime = Date.now();
+        if (lowEnergy > 60 && currentTime - lastBeatTime > 80) {
+            beatIntensity = Math.min(lowEnergy / 180, 1);
+            lastBeatTime = currentTime;
+        } else {
+            beatIntensity *= 0.85;
+        }
+
+        // 平滑过渡
+        smoothIntensity += (beatIntensity - smoothIntensity) * 0.15;
+
+        // 光晕强烈跳动效果
+        auras.forEach((auras, idx) => {
+            const baseScale = 1 + smoothIntensity * (0.2 + idx * 0.08);
+            const baseOpacity = 0.6 + smoothIntensity * 0.5;
+            auras.style.transform = `translate(-50%, -50%) scale(${baseScale})`;
+            auras.style.opacity = baseOpacity;
+            auras.style.filter = `blur(${90 - smoothIntensity * 30}px)`;
+        });
+
+        // 背景亮度和缩放变化
+        const brightness = 1 + smoothIntensity * 0.2;
+        const scale = 1 + smoothIntensity * 0.05;
+        bgOverlay.style.backdropFilter = `brightness(${brightness})`;
+        dynamicBg.style.transform = `scale(${scale})`;
+
+        // 闪烁效果
+        if (smoothIntensity > 0.4) {
+            bgOverlay.style.boxShadow = `inset 0 0 150px rgba(236, 217, 180, ${smoothIntensity * 0.3})`;
+        } else {
+            bgOverlay.style.boxShadow = 'none';
+        }
+
+        beatAnimationId = requestAnimationFrame(animate);
+    }
+
+    animate();
+}
+
+function stopBeatAnimation() {
+    if (beatAnimationId) {
+        cancelAnimationFrame(beatAnimationId);
+        beatAnimationId = null;
+    }
+    // 恢复默认状态
+    const auras = document.querySelectorAll('.glow');
+    const bgOverlay = document.getElementById('bgOverlay');
+    const dynamicBg = document.getElementById('dynamicBg');
+    
+    auras.forEach((auras, idx) => {
+        auras.style.transform = '';
+        auras.style.opacity = '';
+    });
+    bgOverlay.style.backdropFilter = '';
+    dynamicBg.style.transform = '';
+    bgOverlay.style.boxShadow = 'none';
+}

@@ -19,8 +19,8 @@
             background-size: cover;
             background-position: center;
             background-repeat: no-repeat;
-            filter: blur(60px) saturate(1.6);
-            transform: scale(1.05);
+            filter: blur(60px) saturate(2.2) contrast(1.15);
+            transform: scale(1.08);
             transition: background-image 0.6s cubic-bezier(0.2, 0.9, 0.4, 1.2);
             will-change: background-image;
         }
@@ -46,25 +46,25 @@
             width: 85vmax;
             height: 85vmax;
             background: radial-gradient(circle, rgba(255,200,120,0.7), rgba(255,120,80,0.4), transparent);
-            animation: orbit1 14s infinite linear;
+            animation: orbit1 6s infinite linear;
         }
         .glow-2 {
             width: 75vmax;
             height: 75vmax;
             background: radial-gradient(circle, rgba(140,120,240,0.75), rgba(80,180,230,0.5), transparent);
-            animation: orbit2 18s infinite linear reverse;
+            animation: orbit2 8s infinite linear reverse;
         }
         .glow-3 {
             width: 95vmax;
             height: 65vmax;
             background: radial-gradient(circle, rgba(220,150,220,0.7), rgba(180,110,210,0.45), transparent);
-            animation: orbit3 22s infinite linear;
+            animation: orbit3 10s infinite linear;
         }
         .glow-4 {
             width: 70vmax;
             height: 70vmax;
             background: radial-gradient(circle, rgba(255,240,120,0.7), rgba(255,180,60,0.45), transparent);
-            animation: orbit4 12s infinite linear reverse;
+            animation: orbit4 5s infinite linear reverse;
         }
         @keyframes orbit1 {
             0% { left: 10%; top: 20%; transform: translate(-50%, -50%) scale(1); }
@@ -194,40 +194,64 @@
         .desktop-layout {
             display: flex;
             align-items: center;
-            justify-content: center;
             width: 100%;
             height: 100%;
+            padding: 2rem;
+            position: relative;
+        }
+        .fs-lyrics-separate {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 45%;
+            max-width: 600px;
+            padding: 1.5rem 2rem;
+            height: 75vh;
+            display: flex;
+            flex-direction: column;
+        }
+        .fs-lyrics-separate .fs-lyrics-header {
+            margin-bottom: 0.5rem;
+            font-size: 0.85rem;
+            letter-spacing: 1px;
+        }
+        .fs-lyrics-separate .fs-lyrics-scroll {
+            flex: 1;
+            overflow-y: auto;
+            padding-right: 6px;
+        }
+        .fs-lyrics-separate .fs-lyrics-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.9rem;
+            align-items: stretch;
+            padding-bottom: 1.5rem;
         }
         .fullscreen-glass {
-            width: 85%;
-            max-width: 1400px;
-            background: rgba(12, 14, 20, 0.4);
+            width: 380px;
+            min-width: 360px;
+            background: rgba(12, 14, 20, 0.15);
             backdrop-filter: blur(32px);
             border-radius: 56px;
-            border: 1px solid rgba(236, 217, 180, 0.25);
-            box-shadow: 0 30px 50px rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(236, 217, 180, 0.15);
+            box-shadow: 0 30px 50px rgba(0, 0, 0, 0.05);
             display: flex;
+            flex-direction: column;
             overflow: hidden;
+            padding: 2rem 1.5rem;
+            position: absolute;
+            left: calc(25% - 190px);
+            top: 50%;
+            transform: translateY(-50%);
         }
         .fs-left {
-            flex: 1;
-            padding: 2rem 1.5rem;
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            gap: 2rem;
+            gap: 1.8rem;
             background: transparent;
-        }
-        .fs-right {
-            flex: 3;
-            padding: 2rem 2rem 2rem 1.5rem;
-            display: flex;
-            flex-direction: column;
-            border-left: 1px solid rgba(236, 217, 180, 0.25);
-            background: transparent;
-            overflow: hidden;
-            height: 100%;
         }
         .fs-lyrics-scroll {
             flex: 1;
@@ -313,18 +337,28 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            gap: 20px;
+            gap: 12px;
+            width: 100%;
         }
         .fs-btn {
             background: rgba(255, 245, 225, 0.12);
             border: 1px solid rgba(255, 245, 225, 0.25);
             width: 52px;
             height: 52px;
-            border-radius: 40px;
-            font-size: 1.4rem;
+            min-width: 52px;
+            min-height: 52px;
+            max-width: 52px;
+            max-height: 52px;
+            border-radius: 50%;
             cursor: pointer;
             color: #f5e6d4;
             transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0;
+            box-sizing: border-box;
+            flex-shrink: 0;
         }
         .fs-btn.play-pause {
             background: #ecd9b4;
@@ -332,7 +366,11 @@
             color: #1e1b16;
             width: 64px;
             height: 64px;
-            font-size: 1.8rem;
+            min-width: 64px;
+            min-height: 64px;
+            max-width: 64px;
+            max-height: 64px;
+            border-radius: 50%;
         }
         .fs-btn.repeat-active {
             background: rgba(236, 217, 180, 0.7);
@@ -379,6 +417,7 @@
             text-shadow: 0 0 4px rgba(236,217,180,0.3);
         }
         .fs-lyric-item.sung .fs-lyric-text { opacity: 0.2; font-size: 1.2rem; }
+        
         .fs-interlude-dots { display: flex; gap: 10px; padding: 10px 0 10px 16px; }
         .fs-dot {
             width: 5px; height: 5px;
@@ -397,8 +436,6 @@
             display: flex;
             flex-direction: column;
             height: 100%;
-            background: rgba(12, 14, 20, 0.4);
-            backdrop-filter: blur(28px);
         }
         .mobile-lyrics-header { padding: 1.2rem 1.2rem 0.5rem 1.2rem; flex-shrink: 0; }
         .mobile-lyrics-header .lyrics-header { font-size: 0.7rem; text-transform: uppercase; color: #cfc2a8; letter-spacing: 1px; }
@@ -444,6 +481,7 @@
             text-shadow: 0 0 4px rgba(236,217,180,0.3);
         }
         .lyric-item.sung .lyric-text { opacity: 0.2; font-size: 0.95rem; }
+        
         .lyric-item.upcoming .lyric-text { opacity: 0.55; font-size: 1.05rem; }
         .interlude-dots { display: flex; gap: 10px; padding: 8px 0 8px 12px; }
         .dot {
