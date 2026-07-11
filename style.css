@@ -231,11 +231,11 @@
         .fullscreen-glass {
             width: 380px;
             min-width: 360px;
-            background: rgba(12, 14, 20, 0.15);
-            backdrop-filter: blur(32px);
-            border-radius: 56px;
-            border: 1px solid rgba(236, 217, 180, 0.15);
-            box-shadow: 0 30px 50px rgba(0, 0, 0, 0.05);
+            background: transparent;
+            backdrop-filter: none;
+            border-radius: 0;
+            border: none;
+            box-shadow: none;
             display: flex;
             flex-direction: column;
             overflow: hidden;
@@ -267,9 +267,9 @@
             padding-bottom: 2rem;
         }
         .fs-cover-img {
-            width: 180px;
-            height: 180px;
-            border-radius: 32px;
+            width: 340px;
+            height: 340px;
+            border-radius: 48px;
             overflow: hidden;
             box-shadow: 0 18px 32px rgba(0, 0, 0, 0.4);
             cursor: pointer;
