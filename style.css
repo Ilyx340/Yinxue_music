@@ -283,12 +283,31 @@
             background: rgba(255, 245, 220, 0.3);
             border-radius: 20px;
             cursor: pointer;
+            position: relative;
         }
         .fs-progress-fill {
             width: 0%;
             height: 100%;
             background: #ecd9b4;
             border-radius: 20px;
+        }
+        .fs-progress-thumb {
+            position: absolute;
+            top: 50%;
+            left: 0%;
+            width: 12px;
+            height: 12px;
+            background: #ecd9b4;
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            opacity: 0;
+            transition: opacity 0.2s ease, transform 0.2s ease;
+            pointer-events: none;
+            box-shadow: 0 0 8px rgba(236, 217, 180, 0.5);
+        }
+        .fs-progress-bar:hover .fs-progress-thumb {
+            opacity: 1;
+            transform: translate(-50%, -50%) scale(1.2);
         }
         .fs-buttons {
             display: flex;
@@ -460,8 +479,26 @@
         .cover-thumb { width: 54px; height: 54px; border-radius: 16px; overflow: hidden; cursor: pointer; }
         .cover-thumb img { width: 100%; height: 100%; object-fit: cover; }
         .progress-area { display: flex; align-items: center; gap: 10px; font-size: 0.7rem; color: #e2d4c0; }
-        .progress-bar-bg { flex: 1; height: 3px; background: rgba(255, 245, 220, 0.3); border-radius: 20px; cursor: pointer; }
+        .progress-bar-bg { flex: 1; height: 3px; background: rgba(255, 245, 220, 0.3); border-radius: 20px; cursor: pointer; position: relative; }
         .progress-fill { width: 0%; height: 100%; background: #ecd9b4; border-radius: 20px; }
+        .progress-thumb {
+            position: absolute;
+            top: 50%;
+            left: 0%;
+            width: 10px;
+            height: 10px;
+            background: #ecd9b4;
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            opacity: 0;
+            transition: opacity 0.2s ease, transform 0.2s ease;
+            pointer-events: none;
+            box-shadow: 0 0 6px rgba(236, 217, 180, 0.5);
+        }
+        .progress-bar-bg:hover .progress-thumb {
+            opacity: 1;
+            transform: translate(-50%, -50%) scale(1.2);
+        }
         .buttons { display: flex; justify-content: center; align-items: center; gap: 12px; margin-top: 0.2rem; }
         .ctrl-btn {
             background: rgba(255, 245, 225, 0.12);

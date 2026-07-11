@@ -258,6 +258,9 @@ let userSettings = {
     eqValues: [0, 0, 0, 0, 0, 0, 0, 0]
 };
 let idleTimer = null;
+let isScrolling = false;
+let scrollRestoreTimer = null;
+let isAutoScrolling = false; // 标记是否正在自动滚动
 
 // SVG 图标常量
 const PLAY_ICON = '<svg viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3" stroke="currentColor" stroke-width="2" fill="currentColor"/></svg>';
@@ -273,7 +276,8 @@ const fsPlayPause = document.getElementById('fullscreenPlayPause'),
 const fsProgressFill = document.getElementById('fullscreenProgressFill'),
     fsProgressBg = document.getElementById('fullscreenProgressBg'),
     fsCurrentTime = document.getElementById('fullscreenCurrentTime'),
-    fsDuration = document.getElementById('fullscreenDuration');
+    fsDuration = document.getElementById('fullscreenDuration'),
+    fullscreenProgressThumb = document.getElementById('fullscreenProgressThumb');
 const fsRepeatBtn = document.getElementById('fullscreenRepeatBtn'),
     fsMenuBtn = document.getElementById('fullscreenMenuBtn'),
     fsLyricsList = document.getElementById('fullscreenLyricsList'),
@@ -287,7 +291,8 @@ const mobilePlayPause = document.getElementById('mobilePlayPause'),
 const mobileProgressFill = document.getElementById('mobileProgressFill'),
     mobileProgressBg = document.getElementById('mobileProgressBg'),
     mobileCurrentTime = document.getElementById('mobileCurrentTime'),
-    mobileDuration = document.getElementById('mobileDuration');
+    mobileDuration = document.getElementById('mobileDuration'),
+    mobileProgressThumb = document.getElementById('mobileProgressThumb');
 const mobileRepeatBtn = document.getElementById('mobileRepeatBtn'),
     mobileMenuBtn = document.getElementById('mobileMenuBtn'),
     mobileLyricsList = document.getElementById('mobileLyricsList'),
@@ -421,74 +426,211 @@ function renderBothPanels() {
 }
 
 function updateUIByPlaybackTime(currentSec) {
-    fsDomItems.forEach(it => { if (it.type === 'interlude') { const inRange = (currentSec >= it.start && currentSec <= it.end);
-            it.el.classList.toggle('hidden', !inRange); } });
-    let activeIdx = -1;
-    for (let i = 0; i < fsDomItems.length; i++)
-        if (fsDomItems[i].type === 'lyric' && fsDomItems[i].time <= currentSec) activeIdx = i;
-    for (let i = 0; i < fsDomItems.length; i++) {
-        if (fsDomItems[i].type !== 'lyric') continue;
-        const el = fsDomItems[i].el;
-        if (fsDomItems[i].time <= currentSec) {
-            if (i === activeIdx) { el.classList.add('active');
-                el.classList.remove('sung'); } else { el.classList.add('sung');
-                el.classList.remove('active'); }
-        } else { el.classList.remove('active', 'sung'); }
-    }
-    if (activeIdx !== -1 && activeIdx !== lastFsIdx) {
-        const actEl = fsDomItems[activeIdx]?.el;
-        if (actEl && fsLyricsScroll) {
-            const containerRect = fsLyricsScroll.getBoundingClientRect();
-            const elementRect = actEl.getBoundingClientRect();
-            const offset = elementRect.top - (containerRect.top + containerRect.height / 2 - userSettings.lyricOffset);
-            fsLyricsScroll.scrollBy({ top: offset, behavior: 'smooth' });
+    // 优化：只更新需要变化的元素，避免全量遍历
+    
+    // 桌面端歌词更新
+    let fsActiveIdx = -1;
+    // 如果时间为0，默认选中第一行歌词
+    if (currentSec <= 0 && fsDomItems.length > 0) {
+        for (let i = 0; i < fsDomItems.length; i++) {
+            if (fsDomItems[i].type === 'lyric') {
+                fsActiveIdx = i;
+                break;
+            }
         }
-        lastFsIdx = activeIdx;
+    } else {
+        for (let i = fsDomItems.length - 1; i >= 0; i--) {
+            if (fsDomItems[i].type === 'lyric' && fsDomItems[i].time <= currentSec) {
+                fsActiveIdx = i;
+                break;
+            }
+        }
     }
-    mobileDomItems.forEach(it => { if (it.type === 'interlude') { const inRange = (currentSec >= it.start && currentSec <= it.end);
-            it.el.classList.toggle('hidden', !inRange); } });
-    let mobileActive = -1;
-    for (let i = 0; i < mobileDomItems.length; i++)
-        if (mobileDomItems[i].type === 'lyric' && mobileDomItems[i].time <= currentSec) mobileActive = i;
-    for (let i = 0; i < mobileDomItems.length; i++) {
-        if (mobileDomItems[i].type !== 'lyric') continue;
-        const el = mobileDomItems[i].el;
-        if (mobileDomItems[i].time <= currentSec) {
-            if (i === mobileActive) { el.classList.add('active');
-                el.classList.remove('sung', 'upcoming'); } else { el.classList.add('sung');
-                el.classList.remove('active', 'upcoming'); }
-        } else { el.classList.add('upcoming');
-            el.classList.remove('active', 'sung'); }
+    
+    // 更新所有桌面端歌词的模糊状态 - 从当前行扩散，越远越模糊
+    fsDomItems.forEach((item, idx) => {
+        if (item.type !== 'lyric') return;
+        const el = item.el;
+        // 滚动时取消所有模糊效果
+        if (isScrolling) {
+            el.style.filter = 'none';
+            el.style.opacity = '';
+            return;
+        }
+        // 第一行歌词不模糊
+        if (idx === 0) {
+            el.style.filter = 'none';
+            el.style.opacity = '';
+            return;
+        }
+        // 计算与当前行的距离
+        const distance = fsActiveIdx >= 0 ? Math.abs(idx - fsActiveIdx) : 999;
+        // 根据距离计算模糊程度（当前行和下一行不模糊）
+        if (distance <= 1) {
+            el.style.filter = 'none';
+            el.style.opacity = '';
+        } else {
+            // 距离越远越模糊，最大模糊5px
+            const blurAmount = Math.min(distance * 0.8, 5);
+            el.style.filter = `blur(${blurAmount}px)`;
+            el.style.opacity = Math.max(1 - distance * 0.12, 0.2);
+        }
+    });
+    
+    // 只更新状态变化的行
+    if (fsActiveIdx !== lastFsIdx) {
+        // 清除旧的 active 状态
+        if (lastFsIdx >= 0 && fsDomItems[lastFsIdx]?.type === 'lyric') {
+            const oldEl = fsDomItems[lastFsIdx].el;
+            oldEl.classList.remove('active');
+            oldEl.classList.add('sung');
+        }
+        // 设置新的 active 状态
+        if (fsActiveIdx >= 0) {
+            const newEl = fsDomItems[fsActiveIdx].el;
+            newEl.classList.add('active');
+            newEl.classList.remove('sung');
+            // 滚动时不自动滚动歌词
+            if (!isScrolling && fsLyricsScroll) {
+                isAutoScrolling = true;
+                const containerRect = fsLyricsScroll.getBoundingClientRect();
+                const elementRect = newEl.getBoundingClientRect();
+                const offset = elementRect.top - (containerRect.top + containerRect.height / 2 - userSettings.lyricOffset);
+                fsLyricsScroll.scrollBy({ top: offset, behavior: 'smooth' });
+                // 动画结束后重置标志
+                setTimeout(() => { isAutoScrolling = false; }, 500);
+            }
+        }
+        lastFsIdx = fsActiveIdx;
     }
-    if (mobileActive !== -1 && mobileActive !== lastMobileIdx) {
-        const actEl = mobileDomItems[mobileActive]?.el;
-        if (actEl) {
-            requestAnimationFrame(() => {
-                const cr = mobileLyricsContainer.getBoundingClientRect();
-                const er = actEl.getBoundingClientRect();
-                const offset = er.top - (cr.top + cr.height / 2 - userSettings.lyricOffset);
-                mobileLyricsContainer.scrollBy({ top: offset, behavior: 'smooth' });
+    
+    // 移动端歌词更新
+    let mobileActiveIdx = -1;
+    // 如果时间为0，默认选中第一行歌词
+    if (currentSec <= 0 && mobileDomItems.length > 0) {
+        for (let i = 0; i < mobileDomItems.length; i++) {
+            if (mobileDomItems[i].type === 'lyric') {
+                mobileActiveIdx = i;
+                break;
+            }
+        }
+    } else {
+        for (let i = mobileDomItems.length - 1; i >= 0; i--) {
+            if (mobileDomItems[i].type === 'lyric' && mobileDomItems[i].time <= currentSec) {
+                mobileActiveIdx = i;
+                break;
+            }
+        }
+    }
+    
+    // 更新所有移动端歌词的模糊状态 - 从当前行扩散，越远越模糊
+    mobileDomItems.forEach((item, idx) => {
+        if (item.type !== 'lyric') return;
+        const el = item.el;
+        // 滚动时取消所有模糊效果
+        if (isScrolling) {
+            el.style.filter = 'none';
+            el.style.opacity = '';
+            return;
+        }
+        // 第一行歌词不模糊
+        if (idx === 0) {
+            el.style.filter = 'none';
+            el.style.opacity = '';
+            return;
+        }
+        // 计算与当前行的距离
+        const distance = mobileActiveIdx >= 0 ? Math.abs(idx - mobileActiveIdx) : 999;
+        // 根据距离计算模糊程度（当前行和下一行不模糊）
+        if (distance <= 1) {
+            el.style.filter = 'none';
+            el.style.opacity = '';
+        } else {
+            // 距离越远越模糊，最大模糊4px（移动端稍微弱一点）
+            const blurAmount = Math.min(distance * 0.6, 4);
+            el.style.filter = `blur(${blurAmount}px)`;
+            el.style.opacity = Math.max(1 - distance * 0.1, 0.25);
+        }
+    });
+    
+    if (mobileActiveIdx !== lastMobileIdx) {
+        if (lastMobileIdx >= 0 && mobileDomItems[lastMobileIdx]?.type === 'lyric') {
+            const oldEl = mobileDomItems[lastMobileIdx].el;
+            oldEl.classList.remove('active');
+            oldEl.classList.add('sung');
+        }
+        if (mobileActiveIdx >= 0) {
+            const newEl = mobileDomItems[mobileActiveIdx].el;
+            newEl.classList.add('active');
+            newEl.classList.remove('sung', 'upcoming');
+            // 滚动时不自动滚动歌词
+            if (!isScrolling) {
+                isAutoScrolling = true;
+                requestAnimationFrame(() => {
+                    const cr = mobileLyricsContainer.getBoundingClientRect();
+                    const er = newEl.getBoundingClientRect();
+                    const offset = er.top - (cr.top + cr.height / 2 - userSettings.lyricOffset);
+                    mobileLyricsContainer.scrollBy({ top: offset, behavior: 'smooth' });
+                    // 动画结束后重置标志
+                    setTimeout(() => { isAutoScrolling = false; }, 500);
+                });
+            }
+        }
+        lastMobileIdx = mobileActiveIdx;
+    }
+    
+    // 间奏点更新（使用 requestAnimationFrame 节流）
+    if (!updateInterludeTimer) {
+        updateInterludeTimer = requestAnimationFrame(() => {
+            fsDomItems.forEach(it => {
+                if (it.type === 'interlude') {
+                    const inRange = currentSec >= it.start && currentSec <= it.end;
+                    it.el.classList.toggle('hidden', !inRange);
+                }
             });
-        }
-        lastMobileIdx = mobileActive;
+            mobileDomItems.forEach(it => {
+                if (it.type === 'interlude') {
+                    const inRange = currentSec >= it.start && currentSec <= it.end;
+                    it.el.classList.toggle('hidden', !inRange);
+                }
+            });
+            updateInterludeTimer = null;
+        });
     }
 }
+let updateInterludeTimer = null;
 
 function updateProgressAndTime() {
-    if (!audio.duration) return;
+    if (!audio.duration || !isPlaying) return;
     const p = audio.currentTime / audio.duration * 100;
     fsProgressFill.style.width = p + '%';
     mobileProgressFill.style.width = p + '%';
+    // 更新滑块位置
+    if (fullscreenProgressThumb) fullscreenProgressThumb.style.left = p + '%';
+    if (mobileProgressThumb) mobileProgressThumb.style.left = p + '%';
     fsCurrentTime.textContent = formatTime(audio.currentTime);
     mobileCurrentTime.textContent = formatTime(audio.currentTime);
-    fsDuration.textContent = formatTime(audio.duration);
-    mobileDuration.textContent = formatTime(audio.duration);
+    if (formatTime(audio.duration) !== fsDuration.textContent) {
+        fsDuration.textContent = formatTime(audio.duration);
+        mobileDuration.textContent = formatTime(audio.duration);
+    }
     updateUIByPlaybackTime(audio.currentTime);
 }
 
-function startAnimation() { if (animFrame) cancelAnimationFrame(animFrame);
-    (function tick() { if (audio && !audio.paused && audio.src) updateProgressAndTime();
-        animFrame = requestAnimationFrame(tick); })(); }
+function startAnimation() {
+    if (animFrame) cancelAnimationFrame(animFrame);
+    let lastTime = 0;
+    const tick = (currentTime) => {
+        if (!isPlaying) return;
+        // 控制更新频率，避免过度更新
+        if (currentTime - lastTime >= 16) { // ~60fps
+            updateProgressAndTime();
+            lastTime = currentTime;
+        }
+        animFrame = requestAnimationFrame(tick);
+    };
+    animFrame = requestAnimationFrame(tick);
+}
 
 function togglePlayPause() {
     onUserInteraction();
@@ -641,7 +783,7 @@ async function addModelSong() {
     demoSongBtn.textContent = '添加官方歌曲《男模》';
     demoSongBtn.style.opacity = '1';
     demoSongBtn.style.pointerEvents = 'auto';
-    alert(`✅ 《男模》已添加！\n歌名: ${songName}\n歌手: ${artist}\n歌词行数: ${lyricsTimeline.length}`);
+    alert(`《男模》已添加！\n歌名: ${songName}\n歌手: ${artist}\n歌词行数: ${lyricsTimeline.length}`);
     onUserInteraction();
 }
 
@@ -669,7 +811,40 @@ async function addMarrySong() {
     marrySongBtn.textContent = '添加《今天你要嫁给我》';
     marrySongBtn.style.opacity = '1';
     marrySongBtn.style.pointerEvents = 'auto';
-    alert(`✅ 《今天你要嫁给我》已添加！\n歌名: ${songName}\n歌手: ${artist}\n歌词行数: ${lyricsTimeline.length}`);
+    alert(`《今天你要嫁给我》已添加！\n歌名: ${songName}\n歌手: ${artist}\n歌词行数: ${lyricsTimeline.length}`);
+    onUserInteraction();
+}
+
+async function addRainSong() {
+    const basePath = '';
+    const audioUrl = `${basePath}那天下雨了.mp3`;
+    const lyricsUrl = `${basePath}那天下雨了.txt`;
+    const coverUrl = `${basePath}那天下雨了.jpg`;
+    const rainSongBtn = document.getElementById('rainSongBtn');
+    if (rainSongBtn) {
+        rainSongBtn.textContent = '加载歌曲...';
+        rainSongBtn.style.opacity = '0.7';
+        rainSongBtn.style.pointerEvents = 'none';
+    }
+    let lyricsTimeline = [],
+        songName = "那天下雨了",
+        artist = "未知艺术家",
+        coverDataUrl = null;
+    try { const resp = await fetch(lyricsUrl); if (resp.ok) { const txt = await resp.text(); const { songName: pn, artistAlbum: aa, timeline } = parseLyricsFull(txt); if (pn && pn != "未知歌曲") songName = pn; if (aa && aa != "未知艺术家") artist = aa; if (timeline?.length) lyricsTimeline = timeline; } } catch (e) {}
+    try { const resp = await fetch(coverUrl); if (resp.ok) { const blob = await resp.blob();
+            coverDataUrl = await new Promise(resolve => { const fr = new FileReader();
+                fr.onloadend = () => resolve(fr.result);
+                fr.readAsDataURL(blob); }); } } catch (e) {}
+    const coverFinal = coverDataUrl || 'data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 100 100\'%3E%3Crect width=\'100\' height=\'100\' fill=\'%232c2e3a\'/%3E%3Ctext x=\'50\' y=\'55\' font-size=\'12\' fill=\'%23cbbfaa\' text-anchor=\'middle\'%3E🎵%3C/text%3E%3C/svg%3E';
+    playlist.push({ id: Date.now(), name: songName, artist: artist, audioUrl, coverUrl: coverFinal, lyricsTimeline });
+    if (!currentSongId) playSongById(playlist[playlist.length - 1].id);
+    updatePlaylistModalUI();
+    if (rainSongBtn) {
+        rainSongBtn.textContent = '添加《那天下雨了》';
+        rainSongBtn.style.opacity = '1';
+        rainSongBtn.style.pointerEvents = 'auto';
+    }
+    alert(`《那天下雨了》已添加！\n歌名: ${songName}\n歌手: ${artist}\n歌词行数: ${lyricsTimeline.length}`);
     onUserInteraction();
 }
 
@@ -808,6 +983,7 @@ closePlaylistModalBtn.addEventListener('click', closePlaylistModal);
 modalAddSongBtn.addEventListener('click', handleModalAddSong);
 demoSongBtn.addEventListener('click', addModelSong);
 marrySongBtn.addEventListener('click', addMarrySong);
+document.getElementById('rainSongBtn')?.addEventListener('click', addRainSong);
 window.addEventListener('click', (e) => { if (e.target === playlistModal) closePlaylistModal(); });
 fsProgressBg.addEventListener('click', (e) => { if (!audio.duration) return; const rect = fsProgressBg.getBoundingClientRect(); let p = (e.clientX - rect.left) / rect.width;
     p = Math.min(1, Math.max(0, p));
@@ -838,15 +1014,61 @@ window.addEventListener('click', onUserInteraction);
 window.addEventListener('touchstart', onUserInteraction);
 window.addEventListener('mousemove', onUserInteraction);
 
+// 滚动事件处理 - 取消模糊效果和自动滚动，5秒后恢复
+function handleScroll() {
+    // 只有鼠标手动滚动才触发，自动滚动不算
+    if (isAutoScrolling) return;
+    
+    isScrolling = true;
+    // 清除之前的恢复定时器
+    if (scrollRestoreTimer) clearTimeout(scrollRestoreTimer);
+    // 5秒后恢复模糊效果和自动滚动
+    scrollRestoreTimer = setTimeout(() => {
+        isScrolling = false;
+        // 强制更新歌词状态
+        if (audio && audio.currentTime) {
+            updateUIByPlaybackTime(audio.currentTime);
+        }
+    }, 5000);
+}
+
+// 监听歌词区域的滚动事件
+fsLyricsScroll?.addEventListener('scroll', handleScroll);
+mobileLyricsContainer?.addEventListener('scroll', handleScroll);
+
+// 初始化
 // 初始化
 buildEQGrid();
 initAudioContext();
 loadSettings();
 renderBothPanels();
 updateBackgroundFromCover(fsCoverImg.src);
-startAnimation();
-setInterval(() => { if (audio && audio.src && !audio.paused) updateUIByPlaybackTime(audio.currentTime); }, 150);
 updateUIByPlaybackTime(0);
+
+// 清理函数 - 用于页面卸载时释放资源
+function cleanup() {
+    if (animFrame) cancelAnimationFrame(animFrame);
+    if (surroundAnim) cancelAnimationFrame(surroundAnim);
+    if (updateInterludeTimer) cancelAnimationFrame(updateInterludeTimer);
+    if (idleTimer) clearTimeout(idleTimer);
+    if (scrollRestoreTimer) clearTimeout(scrollRestoreTimer);
+    
+    // 释放所有 blob URL
+    playlist.forEach(song => {
+        if (song.audioUrl?.startsWith('blob:')) URL.revokeObjectURL(song.audioUrl);
+        if (song.coverUrl?.startsWith('blob:')) URL.revokeObjectURL(song.coverUrl);
+    });
+    
+    // 关闭音频上下文
+    if (audioCtx) {
+        audioCtx.close();
+        audioCtx = null;
+    }
+}
+
+// 页面卸载时清理
+window.addEventListener('beforeunload', cleanup);
+window.addEventListener('unload', cleanup);
 document.getElementById('fullscreenCoverTrigger').addEventListener('click', () => { appContainer.classList.toggle('web-fullscreen');
     onUserInteraction(); });
 document.getElementById('mobileCoverTrigger').addEventListener('click', () => { appContainer.classList.toggle('web-fullscreen');
