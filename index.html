@@ -62,16 +62,22 @@
     </div>
 
     <div class="mobile-layout" id="mobileLayout">
-        
-        <div class="lyrics-container" id="mobileLyricsContainer"><div class="lyrics-list" id="mobileLyricsList"></div></div>
-        <div class="control-bar">
+        <!-- 顶部歌曲信息栏 -->
+        <div class="mobile-top-bar">
             <div class="info-row">
-                <div class="song-info" id="mobileSongInfo">
-                    <div class="song-title-bottom" id="mobileSongTitle">暂无歌曲</div>
-                    <div class="song-artist-bottom" id="mobileArtist">点击菜单添加</div>
-                </div>
                 <div class="cover-thumb" id="mobileCoverTrigger"><img id="mobileCoverImg" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%232c2e3a'/%3E%3Ctext x='50' y='55' font-size='12' fill='%23cbbfaa' text-anchor='middle'%3E🎵%3C/text%3E%3C/svg%3E" alt="封面"></div>
+                <div class="song-info" id="mobileSongInfo">
+                    <div class="song-title-top" id="mobileSongTitle">暂无歌曲</div>
+                    <div class="song-artist-top" id="mobileArtist">点击菜单添加</div>
+                </div>
             </div>
+        </div>
+        
+        <!-- 歌词区域 -->
+        <div class="lyrics-container" id="mobileLyricsContainer"><div class="lyrics-list" id="mobileLyricsList"></div></div>
+        
+        <!-- 底部控制栏 -->
+        <div class="control-bar">
             <div class="progress-area">
                 <span class="time-current" id="mobileCurrentTime">0:00</span>
                 <div class="progress-bar-bg" id="mobileProgressBg"><div class="progress-fill" id="mobileProgressFill"></div><div class="progress-thumb" id="mobileProgressThumb"></div></div>
@@ -99,7 +105,6 @@
                     <svg viewBox="0 0 24 24"><line x1="3" y1="6" x2="21" y2="6" stroke="currentColor" stroke-width="2.2"/><line x1="3" y1="12" x2="21" y2="12" stroke="currentColor" stroke-width="2.2"/><line x1="3" y1="18" x2="21" y2="18" stroke="currentColor" stroke-width="2.2"/></svg>
                 </button>
             </div>
-            
         </div>
     </div>
 </div>
