@@ -83,8 +83,6 @@ function initAudioContext() {
             }
             filters[filters.length - 1].connect(analyserNode);
             analyserNode.connect(gainNode);
-        } else {
-            gainNode.connect(audioCtx.destination);
         }
         gainNode.connect(audioCtx.destination);
     }
@@ -110,9 +108,8 @@ function setupSurround() {
             pannerNode.connect(gainNode);
         } else {
             if (sourceNode) sourceNode.disconnect();
-            sourceNode = audioCtx.createMediaElementSource(audio);
-            sourceNode.connect(pannerNode);
-            pannerNode.connect(gainNode);
+            try { if (!sourceNode || !sourceNode.mediaElement) sourceNode = audioCtx.createMediaElementSource(audio); } catch(e) {}
+            if (sourceNode) { sourceNode.connect(pannerNode); pannerNode.connect(gainNode); }
         }
         startSurroundAnimation();
     } else {
@@ -123,8 +120,8 @@ function setupSurround() {
                 filters[filters.length - 1].connect(gainNode);
             } else if (sourceNode) {
                 sourceNode.disconnect();
-                sourceNode = audioCtx.createMediaElementSource(audio);
-                sourceNode.connect(gainNode);
+                try { if (!sourceNode.mediaElement) sourceNode = audioCtx.createMediaElementSource(audio); } catch(e) {}
+                if (sourceNode) sourceNode.connect(gainNode);
             }
         }
         if (surroundAnim) cancelAnimationFrame(surroundAnim);
@@ -146,28 +143,31 @@ function startSurroundAnimation() {
 }
 
 function connectEQToAudio() {
-    if (!audioCtx || !sourceNode) return;
+    if (!audioCtx) return;
     try {
-        if (sourceNode.mediaElement) sourceNode.disconnect();
-        sourceNode = audioCtx.createMediaElementSource(audio);
+        if (!sourceNode || !sourceNode.mediaElement) {
+            sourceNode = audioCtx.createMediaElementSource(audio);
+        }
+    } catch(e) {}
+    if (!sourceNode) return;
+    sourceNode.disconnect();
+    if (filters.length) {
+        sourceNode.connect(filters[0]);
+    } else {
+        sourceNode.connect(gainNode);
+    }
+    if (surroundEnabled && pannerNode) {
         if (filters.length) {
-            sourceNode.connect(filters[0]);
+            filters[filters.length - 1].disconnect();
+            filters[filters.length - 1].connect(pannerNode);
+            pannerNode.connect(gainNode);
         } else {
-            sourceNode.connect(gainNode);
+            sourceNode.disconnect();
+            sourceNode.connect(pannerNode);
+            pannerNode.connect(gainNode);
         }
-        if (surroundEnabled && pannerNode) {
-            if (filters.length) {
-                filters[filters.length - 1].disconnect();
-                filters[filters.length - 1].connect(pannerNode);
-                pannerNode.connect(gainNode);
-            } else {
-                sourceNode.disconnect();
-                sourceNode.connect(pannerNode);
-                pannerNode.connect(gainNode);
-            }
-        }
-        gainNode.gain.value = userSettings.volume / 100;
-    } catch (e) { console.warn("EQ连接失败", e); }
+    }
+    gainNode.gain.value = userSettings.volume / 100;
 }
 
 // 预设
@@ -661,21 +661,75 @@ function togglePlayPause() {
         stopBeatAnimation();
     } else {
         if (!audio.src && playlist.length === 0) { showPlaylistModal(); return; }
-        if (!audio.src && playlist.length > 0) { playSongById(playlist[playlist.length - 1].id); return; }
+        if (!audio.src && playlist.length > 0) { playSongById(playlist[playlist.length - 1].id, true); return; }
         audio.play().then(() => { isPlaying = true;
             fsPlayPause.innerHTML = PAUSE_ICON;
             mobilePlayPause.innerHTML = PAUSE_ICON;
             startAnimation();
-            startBeatAnimation(); }).catch(() => {});
+            startBeatAnimation();
+        }).catch(e => {
+            console.error('播放失败:', e);
+            // 强制恢复音频上下文后重试
+            if (audioCtx && audioCtx.state === 'suspended') {
+                audioCtx.resume().then(() => {
+                    audio.volume = userSettings.volume / 100;
+                    audio.play().then(() => {
+                        isPlaying = true;
+                        fsPlayPause.innerHTML = PAUSE_ICON;
+                        mobilePlayPause.innerHTML = PAUSE_ICON;
+                        startAnimation();
+                        startBeatAnimation();
+                    }).catch(e2 => {
+                        console.error('重试播放失败:', e2);
+                        // 终极 fallback：绕过 Web Audio 直接播放
+                        if (sourceNode) sourceNode.disconnect();
+                        sourceNode = null;
+                        audio.volume = userSettings.volume / 100;
+                        audio.play().then(() => {
+                            isPlaying = true;
+                            fsPlayPause.innerHTML = PAUSE_ICON;
+                            mobilePlayPause.innerHTML = PAUSE_ICON;
+                            startAnimation();
+                            startBeatAnimation();
+                        }).catch(e3 => console.error('终极播放失败:', e3));
+                    });
+                }).catch(e2 => {
+                    console.error('恢复音频上下文失败:', e2);
+                    // 终极 fallback：绕过 Web Audio 直接播放
+                    if (sourceNode) sourceNode.disconnect();
+                    sourceNode = null;
+                    audio.volume = userSettings.volume / 100;
+                    audio.play().then(() => {
+                        isPlaying = true;
+                        fsPlayPause.innerHTML = PAUSE_ICON;
+                        mobilePlayPause.innerHTML = PAUSE_ICON;
+                        startAnimation();
+                        startBeatAnimation();
+                    }).catch(e3 => console.error('终极播放失败:', e3));
+                });
+            } else {
+                // 终极 fallback：绕过 Web Audio 直接播放
+                if (sourceNode) sourceNode.disconnect();
+                sourceNode = null;
+                audio.volume = userSettings.volume / 100;
+                audio.play().then(() => {
+                    isPlaying = true;
+                    fsPlayPause.innerHTML = PAUSE_ICON;
+                    mobilePlayPause.innerHTML = PAUSE_ICON;
+                    startAnimation();
+                    startBeatAnimation();
+                }).catch(e2 => console.error('终极播放失败:', e2));
+            }
+        });
     }
 }
 
 function prevSong() { if (!playlist.length) return; let idx = playlist.findIndex(s => s.id === currentSongId); if (idx === -1) idx = 0; let newIdx = (idx - 1 + playlist.length) % playlist.length;
-    playSongById(playlist[newIdx].id);
+    playSongById(playlist[newIdx].id, true);
     onUserInteraction(); }
 
 function nextSong() { if (!playlist.length) return; let idx = playlist.findIndex(s => s.id === currentSongId); if (idx === -1) idx = 0; let newIdx = (idx + 1) % playlist.length;
-    playSongById(playlist[newIdx].id);
+    playSongById(playlist[newIdx].id, true);
     onUserInteraction(); }
 
 function toggleRepeat() { isRepeat = !isRepeat;
@@ -683,7 +737,7 @@ function toggleRepeat() { isRepeat = !isRepeat;
     mobileRepeatBtn.classList.toggle('repeat-active', isRepeat);
     onUserInteraction(); }
 
-function playSongById(id) {
+function playSongById(id, bypassWebAudio = true) {
     const song = playlist.find(s => s.id === id);
     if (!song) return;
     if (audio.src) URL.revokeObjectURL(audio.src);
@@ -721,33 +775,68 @@ function playSongById(id) {
         navigator.mediaSession.setActionHandler('nexttrack', nextSong);
     }
     audio.load();
-    if (!audioCtx) initAudioContext();
-    if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
-    setTimeout(() => {
-        if (audioCtx) {
-            sourceNode = audioCtx.createMediaElementSource(audio);
-            if (filters.length) sourceNode.connect(filters[0]);
-            else sourceNode.connect(gainNode);
-            if (surroundEnabled && pannerNode) {
-                if (filters.length) {
-                    filters[filters.length - 1].disconnect();
-                    filters[filters.length - 1].connect(pannerNode);
-                    pannerNode.connect(gainNode);
-                } else {
+    // 直接播放 fallback：不经过 Web Audio 链路，确保有声音
+    audio.volume = userSettings.volume / 100;
+    
+    if (!bypassWebAudio) {
+        // 尝试初始化 Web Audio 链路（用于均衡器和环绕）
+        if (!audioCtx) initAudioContext();
+        if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+        setTimeout(() => {
+            if (audioCtx) {
+                try {
+                    if (!sourceNode || !sourceNode.mediaElement) {
+                        sourceNode = audioCtx.createMediaElementSource(audio);
+                    }
+                } catch(e) {
+                    // 音频源节点已存在，复用即可
+                }
+                if (sourceNode) {
                     sourceNode.disconnect();
-                    sourceNode.connect(pannerNode);
-                    pannerNode.connect(gainNode);
+                    if (filters.length) sourceNode.connect(filters[0]);
+                    else sourceNode.connect(gainNode);
+                    if (surroundEnabled && pannerNode) {
+                        if (filters.length) {
+                            filters[filters.length - 1].disconnect();
+                            filters[filters.length - 1].connect(pannerNode);
+                            pannerNode.connect(gainNode);
+                        } else {
+                            sourceNode.disconnect();
+                            sourceNode.connect(pannerNode);
+                            pannerNode.connect(gainNode);
+                        }
+                    }
+                    gainNode.gain.value = userSettings.volume / 100;
                 }
             }
-            gainNode.gain.value = userSettings.volume / 100;
-        }
-    }, 50);
-    audio.volume = userSettings.volume / 100;
+        }, 50);
+    } else {
+        // 绕过 Web Audio 直接播放
+        if (sourceNode) sourceNode.disconnect();
+        sourceNode = null;
+        console.log('绕过 Web Audio 直接播放');
+    }
     audio.play().then(() => { isPlaying = true;
         fsPlayPause.innerHTML = PAUSE_ICON;
         mobilePlayPause.innerHTML = PAUSE_ICON;
         startAnimation();
-        startBeatAnimation(); }).catch(() => {});
+        startBeatAnimation();
+    }).catch(e => {
+        console.error('播放失败:', e);
+        // 强制恢复音频上下文后重试
+        if (audioCtx && audioCtx.state === 'suspended') {
+            audioCtx.resume().then(() => audio.play()).catch(e2 => {
+                console.error('重试播放失败:', e2);
+                // 终极 fallback：直接设置音量并播放
+                audio.volume = userSettings.volume / 100;
+                audio.play().catch(e3 => console.error('终极播放失败:', e3));
+            });
+        } else {
+            // 终极 fallback：直接设置音量并播放
+            audio.volume = userSettings.volume / 100;
+            audio.play().catch(e2 => console.error('终极播放失败:', e2));
+        }
+    });
     updatePlaylistModalUI();
     onUserInteraction();
 }
@@ -760,7 +849,7 @@ function deleteSongById(id) {
     if (song.coverUrl?.startsWith('blob:')) URL.revokeObjectURL(song.coverUrl);
     playlist.splice(idx, 1);
     if (currentSongId === id) {
-        if (playlist.length) playSongById(playlist[0].id);
+        if (playlist.length) playSongById(playlist[0].id, true);
         else {
             audio.pause();
             isPlaying = false;
@@ -792,7 +881,7 @@ function addNewSong(audioFile, lyricsFile, coverFile) {
     let artist = "未知艺术家";
     let lyricsTimeline = [];
     const finalize = (parsedName, parsedArtist, timeline) => { if (parsedName && parsedName != "未知歌曲") songName = parsedName; if (parsedArtist && parsedArtist != "未知艺术家") artist = parsedArtist; if (timeline?.length) lyricsTimeline = timeline; const newSong = { id: Date.now(), name: songName, artist: artist, audioUrl, coverUrl, lyricsTimeline };
-        playlist.push(newSong); if (!currentSongId) playSongById(newSong.id);
+        playlist.push(newSong); if (!currentSongId) playSongById(newSong.id, true);
         updatePlaylistModalUI(); };
     if (lyricsFile) { const reader = new FileReader();
         reader.onload = (e) => { const { songName: lrcSong, artistAlbum, timeline } = parseLyricsFull(e.target.result);
@@ -820,7 +909,7 @@ async function addModelSong() {
                 fr.readAsDataURL(blob); }); } } catch (e) {}
     const coverFinal = coverDataUrl || 'data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 100 100\'%3E%3Crect width=\'100\' height=\'100\' fill=\'%232c2e3a\'/%3E%3Ctext x=\'50\' y=\'55\' font-size=\'12\' fill=\'%23cbbfaa\' text-anchor=\'middle\'%3E🎵%3C/text%3E%3C/svg%3E';
     playlist.push({ id: Date.now(), name: songName, artist: artist, audioUrl, coverUrl: coverFinal, lyricsTimeline });
-    if (!currentSongId) playSongById(playlist[playlist.length - 1].id);
+    if (!currentSongId) playSongById(playlist[playlist.length - 1].id, true);
     updatePlaylistModalUI();
     demoSongBtn.textContent = '添加官方歌曲《男模》';
     demoSongBtn.style.opacity = '1';
@@ -848,7 +937,7 @@ async function addMarrySong() {
                 fr.readAsDataURL(blob); }); } } catch (e) {}
     const coverFinal = coverDataUrl || 'data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 100 100\'%3E%3Crect width=\'100\' height=\'100\' fill=\'%232c2e3a\'/%3E%3Ctext x=\'50\' y=\'55\' font-size=\'12\' fill=\'%23cbbfaa\' text-anchor=\'middle\'%3E🎵%3C/text%3E%3C/svg%3E';
     playlist.push({ id: Date.now(), name: songName, artist: artist, audioUrl, coverUrl: coverFinal, lyricsTimeline });
-    if (!currentSongId) playSongById(playlist[playlist.length - 1].id);
+    if (!currentSongId) playSongById(playlist[playlist.length - 1].id, true);
     updatePlaylistModalUI();
     marrySongBtn.textContent = '添加《今天你要嫁给我》';
     marrySongBtn.style.opacity = '1';
@@ -879,7 +968,7 @@ async function addRainSong() {
                 fr.readAsDataURL(blob); }); } } catch (e) {}
     const coverFinal = coverDataUrl || 'data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 100 100\'%3E%3Crect width=\'100\' height=\'100\' fill=\'%232c2e3a\'/%3E%3Ctext x=\'50\' y=\'55\' font-size=\'12\' fill=\'%23cbbfaa\' text-anchor=\'middle\'%3E🎵%3C/text%3E%3C/svg%3E';
     playlist.push({ id: Date.now(), name: songName, artist: artist, audioUrl, coverUrl: coverFinal, lyricsTimeline });
-    if (!currentSongId) playSongById(playlist[playlist.length - 1].id);
+    if (!currentSongId) playSongById(playlist[playlist.length - 1].id, true);
     updatePlaylistModalUI();
     if (rainSongBtn) {
         rainSongBtn.textContent = '添加《那天下雨了》';
@@ -898,7 +987,7 @@ function updatePlaylistModalUI() {
         div.innerHTML = `<img class="playlist-song-cover" src="${song.coverUrl}" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 100 100\'%3E%3Crect width=\'100\' height=\'100\' fill=\'%232c2e3a\'/%3E%3Ctext x=\'50\' y=\'55\' font-size=\'12\' fill=\'%23cbbfaa\' text-anchor=\'middle\'%3E🎵%3C/text%3E%3C/svg%3E'"><div class="playlist-song-info"><div class="playlist-song-name">${escapeHtml(song.name)}</div><div class="playlist-song-artist">${escapeHtml(song.artist)}</div></div><button class="playlist-delete-btn" data-id="${song.id}">🗑️</button>`;
         div.querySelector('.playlist-delete-btn').addEventListener('click', (e) => { e.stopPropagation();
             deleteSongById(song.id); });
-        div.addEventListener('click', () => { playSongById(song.id);
+        div.addEventListener('click', () => { playSongById(song.id, true);
             closePlaylistModal(); });
         playlistModalList.appendChild(div); });
 }
@@ -1008,7 +1097,13 @@ function resetIdleTimer() {
     }
 }
 
-function onUserInteraction() { resetIdleTimer(); }
+function onUserInteraction() {
+    resetIdleTimer();
+    // 恢复音频上下文（浏览器要求必须由用户交互触发）
+    if (audioCtx && audioCtx.state === 'suspended') {
+        audioCtx.resume().catch(e => console.warn('恢复音频上下文失败', e));
+    }
+}
 
 // 事件绑定
 fsPlayPause.addEventListener('click', togglePlayPause);
@@ -1043,7 +1138,7 @@ audio.addEventListener('ended', () => {
             isPlaying = false;
             fsPlayPause.innerHTML = PLAY_ICON;
             mobilePlayPause.innerHTML = PLAY_ICON; if (animFrame) cancelAnimationFrame(animFrame);
-            animFrame = null; } else playSongById(playlist[nextIdx].id); } else { audio.pause();
+            animFrame = null; } else playSongById(playlist[nextIdx].id, true); } else { audio.pause();
         isPlaying = false;
         fsPlayPause.innerHTML = PLAY_ICON;
         mobilePlayPause.innerHTML = PLAY_ICON; if (animFrame) cancelAnimationFrame(animFrame);
@@ -1246,4 +1341,317 @@ function stopBeatAnimation() {
     bgOverlay.style.backdropFilter = '';
     dynamicBg.style.transform = '';
     bgOverlay.style.boxShadow = 'none';
+}
+
+// ================================================================
+//  网易云音乐 API 搜索与集成
+// ================================================================
+const WYY_API_BASE = 'http://localhost:3000';
+const WYY_PAGE_SIZE = 30;
+
+let wyyCurrentResults = [];
+let wyyIsLoadingMore = false;
+let wyyHasMore = false;
+let wyyCurrentPage = 1;
+
+async function wyyApiRequest(path, params = {}) {
+    const qs = new URLSearchParams(params).toString();
+    const url = WYY_API_BASE + path + (qs ? '?' + qs : '');
+    console.log('📡 网易云请求:', url);
+    const resp = await fetch(url, {
+        signal: AbortSignal.timeout(12000),
+        headers: {
+            'User-Agent': 'Mozilla/5.0',
+            'Referer': 'https://music.163.com'
+        }
+    });
+    if (!resp.ok) throw new Error('HTTP ' + resp.status);
+    const data = await resp.json();
+    if (data.code !== 200 && data.code !== 0) {
+        throw new Error(data.msg || data.message || '请求失败');
+    }
+    return data;
+}
+
+async function wyyCheckApiStatus() {
+    const badge = document.getElementById('wyyApiBadge');
+    const text = document.getElementById('wyyApiStatusText');
+    if (!badge || !text) return;
+    try {
+        await wyyApiRequest('/search', { keywords: 'test', limit: 1 });
+        badge.className = 'wyy-api-badge';
+        text.textContent = '已连接 ✅';
+        wyySetStatus('✅ 本地 API 已连接', 'success');
+    } catch (_) {
+        badge.className = 'wyy-api-badge offline';
+        text.textContent = '未连接 ❌';
+        wyySetStatus('⚠️ 本地 API 未连接，请检查服务是否启动', 'error');
+    }
+}
+
+function wyySetStatus(msg, type) {
+    const el = document.getElementById('wyyStatus');
+    if (!el) return;
+    el.textContent = msg;
+    el.className = 'wyy-status';
+    if (type === 'error') el.classList.add('error');
+    if (type === 'success') el.classList.add('success');
+    if (type === 'warning') el.classList.add('warning');
+}
+
+function wyyShowLoading(show) {
+    const btn = document.getElementById('wyySearchBtn2');
+    if (!btn) return;
+    btn.disabled = show;
+    btn.textContent = show ? '搜索中…' : '搜索';
+}
+
+async function wyyFetchCoversForResults(results) {
+    if (!results || results.length === 0) return;
+    const ids = results.map(s => s.id).join(',');
+    try {
+        const detailData = await wyyApiRequest('/song/detail', { ids: ids });
+        const songs = detailData.songs || [];
+        const coverMap = {};
+        songs.forEach(song => {
+            const album = song.al || song.album || {};
+            let cover = album.picUrl || album.pic || '';
+            if (cover) cover = cover.replace(/^http:\/\//, 'https://');
+            coverMap[song.id] = cover;
+        });
+        results.forEach(item => {
+            if (coverMap[item.id]) item.cover = coverMap[item.id];
+        });
+    } catch (e) {
+        console.warn('批量获取封面失败:', e);
+    }
+}
+
+function wyyRenderSongs(songs) {
+    const container = document.getElementById('wyyResults');
+    if (!container) return;
+    container.innerHTML = '';
+    if (!songs || songs.length === 0) {
+        container.innerHTML = '<div class="wyy-empty-hint">😅 没有歌曲</div>';
+        return;
+    }
+    songs.forEach((song, index) => wyyCreateSongItem(song, index, container));
+}
+
+function wyyCreateSongItem(song, index, container) {
+    const div = document.createElement('div');
+    div.className = 'wyy-song-item';
+    const inPlaylist = playlist.some(s => s.id === song.id);
+    const isCurrent = currentSongId === song.id;
+    const artistName = (song.artists || []).map(a => a.name).join(' / ');
+    let coverSrc = song.cover || '';
+    if (!coverSrc) {
+        coverSrc = 'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22%3E%3Crect width=%22100%22 height=%22100%22 fill=%22%232c2e3a%22/%3E%3Ctext x=%2250%22 y=%2255%22 font-size=%2212%22 fill=%22%23cbbfaa%22 text-anchor=%22middle%22%3E🎵%3C/text%3E%3C/svg%3E';
+    }
+    div.innerHTML = '<div class="wyy-index">' + (index + 1) + '</div>' +
+        '<img class="wyy-cover" src="' + coverSrc + '" referrerpolicy="origin" onerror="this.src=\'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22%3E%3Crect width=%22100%22 height=%22100%22 fill=%22%232c2e3a%22/%3E%3Ctext x=%2250%22 y=%2255%22 font-size=%2212%22 fill=%22%23cbbfaa%22 text-anchor=%22middle%22%3E🎵%3C/text%3E%3C/svg%3E\'" />' +
+        '<div class="wyy-info">' +
+            '<div class="wyy-name">' + escapeHtml(song.name) + (isCurrent ? ' 🔊' : '') + '</div>' +
+            '<div class="wyy-artist">' + escapeHtml(artistName || '未知歌手') + '</div>' +
+        '</div>' +
+        '<div class="wyy-actions">' +
+            '<button class="' + (inPlaylist ? 'wyy-added' : '') + '" onclick="event.stopPropagation(); wyyAddSong(' + song.id + ')">' +
+                (inPlaylist ? '✅' : '➕') +
+            '</button>' +
+        '</div>';
+    div.addEventListener('click', () => wyyAddSong(song.id));
+    container.appendChild(div);
+}
+
+async function wyySearch(page) {
+    if (page === undefined) page = 1;
+    const keyword = document.getElementById('wyySearchInput').value.trim();
+    if (!keyword) { wyySetStatus('⚠️ 请输入歌名或歌手', 'error'); return; }
+
+    wyySetStatus('🔍 搜索中…');
+    if (page === 1) {
+        wyyShowLoading(true);
+        document.getElementById('wyyResults').innerHTML = '<div class="wyy-loading-text">🔍 搜索中…</div>';
+        document.getElementById('wyyLoadMore').classList.add('hidden');
+    } else {
+        wyyIsLoadingMore = true;
+        document.getElementById('wyyLoadMore').textContent = '加载中…';
+    }
+
+    try {
+        const offset = (page - 1) * WYY_PAGE_SIZE;
+        const data = await wyyApiRequest('/search', {
+            keywords: keyword,
+            limit: WYY_PAGE_SIZE,
+            offset: offset
+        });
+        const songs = data.result?.songs || [];
+        const total = data.result?.songCount || 0;
+
+        let rawResults = songs.map(s => ({
+            id: s.id,
+            name: s.name,
+            artists: s.artists || [],
+            duration: s.duration || 0,
+            cover: ''
+        }));
+
+        if (page === 1) {
+            wyyCurrentPage = 1;
+            wyyCurrentResults = rawResults;
+            wyyRenderSongs(wyyCurrentResults);
+            await wyyFetchCoversForResults(wyyCurrentResults);
+            wyyRenderSongs(wyyCurrentResults);
+            wyySetStatus('✅ 找到 ' + wyyCurrentResults.length + ' 首歌曲', 'success');
+        } else {
+            wyyCurrentPage = page;
+            wyyCurrentResults = wyyCurrentResults.concat(rawResults);
+            await wyyFetchCoversForResults(rawResults);
+            wyyRenderSongs(wyyCurrentResults);
+            wyySetStatus('已加载 ' + wyyCurrentResults.length + ' 首', 'success');
+        }
+
+        wyyHasMore = (wyyCurrentResults.length < total) && (songs.length === WYY_PAGE_SIZE);
+        document.getElementById('wyyLoadMore').classList.toggle('hidden', !wyyHasMore);
+        if (wyyHasMore) document.getElementById('wyyLoadMore').textContent = '加载更多';
+    } catch (e) {
+        if (page === 1) {
+            document.getElementById('wyyResults').innerHTML = '<div class="wyy-loading-text">❌ ' + e.message + '</div>';
+        } else {
+            document.getElementById('wyyLoadMore').textContent = '加载失败，点击重试';
+        }
+        wyySetStatus('⚠️ ' + e.message, 'error');
+    }
+    if (page === 1) wyyShowLoading(false);
+    wyyIsLoadingMore = false;
+}
+
+function wyyLoadMore() {
+    if (wyyIsLoadingMore || !wyyHasMore) return;
+    wyySearch(wyyCurrentPage + 1);
+}
+
+function wyyQuickSearch(keyword) {
+    document.getElementById('wyySearchInput').value = keyword;
+    wyySearch();
+}
+
+async function wyyAddSong(songId) {
+    if (playlist.some(s => s.id === songId)) {
+        playSongById(songId, true);
+        closePlaylistModal();
+        return;
+    }
+
+    try {
+        wyySetStatus('⏳ 加载歌曲…', 'warning');
+
+        const detail = await wyyApiRequest('/song/detail', { ids: String(songId) });
+        const songData = detail.songs?.[0];
+        if (!songData) throw new Error('歌曲详情为空');
+
+        const album = songData.al || songData.album || {};
+        let cover = album.picUrl || album.pic || '';
+        if (cover) cover = cover.replace(/^http:\/\//, 'https://');
+
+        const urlData = await wyyApiRequest('/song/url/v1', { id: songId, level: 'exhigh' });
+        const url = urlData.data?.[0]?.url;
+        if (!url) {
+            wyySetStatus('⚠️ 无法播放（可能受版权保护）', 'error');
+            return;
+        }
+
+        let lyricsTimeline = [];
+        try {
+            const lyricRes = await wyyApiRequest('/lyric', { id: songId });
+            const main = lyricRes.lrc?.lyric || '';
+            if (main) {
+                lyricsTimeline = wyyParseLyricsToTimeline(main, (songData.dt || 0) / 1000);
+            }
+        } catch (_) {}
+
+        const artistName = (songData.ar || songData.artists || []).map(a => a.name).join(' / ');
+
+        playlist.push({
+            id: songId,
+            name: songData.name,
+            artist: artistName || '未知歌手',
+            audioUrl: url,
+            coverUrl: cover,
+            lyricsTimeline: lyricsTimeline
+        });
+
+        updatePlaylistModalUI();
+        if (!currentSongId) playSongById(songId, true);
+        else playSongById(songId, true);
+        wyyRenderSongs(wyyCurrentResults);
+        wyySetStatus('✅ 已添加：' + songData.name, 'success');
+    } catch (e) {
+        wyySetStatus('⚠️ ' + e.message, 'error');
+    }
+}
+
+function wyyParseLyricsToTimeline(lrc, durationSec) {
+    if (lrc.charCodeAt(0) === 0xFEFF) lrc = lrc.slice(1);
+    const lines = lrc.split(/\r?\n/).filter(l => l.trim());
+    const result = [];
+    for (const line of lines) {
+        const m = line.match(/\[(\d{1,2}):(\d{1,2})(?:\.|:)(\d{1,6})\]\s*(.+)/);
+        if (m) {
+            const minutes = parseInt(m[1], 10);
+            const seconds = parseInt(m[2], 10);
+            let ms = parseInt(m[3], 10);
+            if (isNaN(ms)) ms = 0;
+            else if (m[3].length === 1) ms *= 100;
+            else if (m[3].length === 2) ms *= 10;
+            const time = minutes * 60 + seconds + ms / 1000;
+            const text = m[4].trim();
+            if (text) result.push({ time: parseFloat(time.toFixed(3)), text, align: 'left', singer: '' });
+        }
+    }
+    result.sort((a, b) => a.time - b.time);
+    if (durationSec && durationSec > 0) {
+        return result.filter(item => item.time <= durationSec + 10);
+    }
+    return result;
+}
+
+function wyyShowSearchPanel() {
+    mainPanelDiv.classList.add('hide');
+    settingsPanelDiv.classList.remove('active');
+    const wyyPanel = document.getElementById('wyySearchPanel');
+    if (wyyPanel) wyyPanel.classList.add('active');
+    wyyCheckApiStatus();
+}
+
+function wyyBackFromSearch() {
+    const wyyPanel = document.getElementById('wyySearchPanel');
+    if (wyyPanel) wyyPanel.classList.remove('active');
+    mainPanelDiv.classList.remove('hide');
+}
+
+// 网易云搜索面板事件绑定
+const openWyySearchBtn = document.getElementById('openWyySearchBtn');
+const backFromWyySearchBtn = document.getElementById('backFromWyySearchBtn');
+if (openWyySearchBtn) openWyySearchBtn.addEventListener('click', wyyShowSearchPanel);
+if (backFromWyySearchBtn) backFromWyySearchBtn.addEventListener('click', wyyBackFromSearch);
+
+// 初始化网易云 API 检测
+setTimeout(() => wyyCheckApiStatus(), 1000);
+setInterval(() => { if (document.getElementById('wyySearchPanel')?.classList.contains('active')) wyyCheckApiStatus(); }, 30000);
+
+// 测试直接播放函数
+function testDirectPlay() {
+    if (!audio.src) return;
+    // 绕过 Web Audio 直接播放
+    if (sourceNode) sourceNode.disconnect();
+    sourceNode = null;
+    audio.volume = userSettings.volume / 100;
+    audio.play().then(() => {
+        isPlaying = true;
+        fsPlayPause.innerHTML = PAUSE_ICON;
+        mobilePlayPause.innerHTML = PAUSE_ICON;
+        startAnimation();
+        startBeatAnimation();
+    }).catch(e => console.error('测试播放失败:', e));
 }

@@ -902,3 +902,228 @@
 .lyric-item.refresh {
     animation: lyricRefresh 0.4s cubic-bezier(0.2, 0.85, 0.4, 1) forwards;
 }
+
+/* ===== 网易云音乐搜索面板样式 ===== */
+.wyy-search-panel { display: none; }
+.wyy-search-panel.active { display: block; }
+
+.wyy-search-btn {
+    background: rgba(236,217,180,0.15);
+    border: none;
+    font-size: 1rem;
+    font-weight: 500;
+    cursor: pointer;
+    color: #ecd9b4;
+    margin-right: 12px;
+    transition: 0.2s;
+    padding: 4px 12px;
+    border-radius: 40px;
+}
+.wyy-search-btn:hover { background: rgba(236,217,180,0.3); color: #fff5e8; }
+
+.wyy-api-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    padding: 4px 16px;
+    border-radius: 20px;
+    background: rgba(100, 200, 100, 0.10);
+    border: 1px solid rgba(100, 200, 100, 0.15);
+    color: #8fdf8f;
+}
+.wyy-api-badge.offline {
+    background: rgba(255, 100, 100, 0.10);
+    border-color: rgba(255, 100, 100, 0.15);
+    color: #ff6b6b;
+}
+.wyy-api-badge .wyy-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #4caf50;
+    display: inline-block;
+}
+.wyy-api-badge.offline .wyy-dot { background: #ff6b6b; }
+
+.wyy-search-box {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 14px;
+}
+.wyy-search-box input {
+    flex: 1;
+    padding: 12px 18px;
+    border-radius: 30px;
+    border: 1px solid rgba(236, 217, 180, 0.12);
+    background: rgba(0, 0, 0, 0.4);
+    color: #fff;
+    font-size: 15px;
+    outline: none;
+    transition: 0.3s;
+}
+.wyy-search-box input:focus { border-color: #ecd9b4; }
+.wyy-search-box input::placeholder { color: rgba(255, 255, 255, 0.2); }
+.wyy-search-box button {
+    padding: 12px 28px;
+    border-radius: 30px;
+    border: none;
+    background: #ecd9b4;
+    color: #1e1b16;
+    font-weight: 600;
+    cursor: pointer;
+    transition: 0.3s;
+    font-size: 14px;
+    white-space: nowrap;
+}
+.wyy-search-box button:hover {
+    transform: scale(1.02);
+    box-shadow: 0 4px 20px rgba(236, 217, 180, 0.2);
+}
+.wyy-search-box button:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.wyy-quick-tags {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    margin-bottom: 14px;
+}
+.wyy-quick-tags button {
+    padding: 5px 14px;
+    border-radius: 16px;
+    border: 1px solid rgba(236, 217, 180, 0.08);
+    background: rgba(236, 217, 180, 0.04);
+    color: #a09686;
+    cursor: pointer;
+    font-size: 12px;
+    transition: 0.3s;
+}
+.wyy-quick-tags button:hover {
+    background: rgba(236, 217, 180, 0.10);
+    color: #ecd9b4;
+}
+
+.wyy-results {
+    max-height: 350px;
+    overflow-y: auto;
+    margin-bottom: 4px;
+}
+.wyy-results::-webkit-scrollbar { width: 4px; }
+.wyy-results::-webkit-scrollbar-thumb { background: rgba(236, 217, 180, 0.15); border-radius: 10px; }
+
+.wyy-song-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 14px;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: 0.2s;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+}
+.wyy-song-item:hover { background: rgba(236, 217, 180, 0.05); }
+.wyy-song-item .wyy-cover {
+    width: 44px;
+    height: 44px;
+    border-radius: 8px;
+    object-fit: cover;
+    flex-shrink: 0;
+    background: #2a2c3a;
+}
+.wyy-song-item .wyy-info { flex: 1; min-width: 0; }
+.wyy-song-item .wyy-info .wyy-name {
+    font-weight: 500;
+    font-size: 14px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.wyy-song-item .wyy-info .wyy-artist {
+    font-size: 12px;
+    opacity: 0.4;
+    margin-top: 2px;
+}
+.wyy-song-item .wyy-actions {
+    display: flex;
+    gap: 6px;
+    flex-shrink: 0;
+}
+.wyy-song-item .wyy-actions button {
+    padding: 4px 14px;
+    border-radius: 14px;
+    border: 1px solid rgba(236, 217, 180, 0.15);
+    background: transparent;
+    color: #ecd9b4;
+    cursor: pointer;
+    font-size: 11px;
+    transition: 0.3s;
+}
+.wyy-song-item .wyy-actions button:hover { background: rgba(236, 217, 180, 0.08); }
+.wyy-song-item .wyy-actions button.wyy-added {
+    background: rgba(100, 200, 100, 0.12);
+    border-color: rgba(100, 200, 100, 0.15);
+    color: #8fdf8f;
+}
+.wyy-song-item .wyy-index {
+    color: rgba(255, 255, 255, 0.12);
+    font-size: 12px;
+    min-width: 26px;
+    text-align: center;
+}
+
+.wyy-load-more {
+    text-align: center;
+    padding: 12px;
+    margin: 8px 0;
+    border-radius: 30px;
+    background: rgba(236, 217, 180, 0.05);
+    border: 1px solid rgba(236, 217, 180, 0.08);
+    color: #a09686;
+    cursor: pointer;
+    transition: 0.3s;
+    font-size: 13px;
+}
+.wyy-load-more:hover {
+    background: rgba(236, 217, 180, 0.08);
+    color: #ecd9b4;
+}
+.wyy-load-more.hidden { display: none; }
+
+.wyy-status {
+    text-align: center;
+    padding: 10px;
+    opacity: 0.5;
+    font-size: 14px;
+    margin-bottom: 14px;
+    min-height: 38px;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.02);
+}
+.wyy-status.error { color: #ff6b6b; opacity: 1; }
+.wyy-status.success { color: #8fdf8f; opacity: 1; }
+.wyy-status.warning { color: #ffd93d; opacity: 1; }
+
+.wyy-loading-text {
+    text-align: center;
+    padding: 30px 0;
+    opacity: 0.4;
+    font-size: 14px;
+}
+.wyy-empty-hint {
+    text-align: center;
+    padding: 20px 0;
+    opacity: 0.3;
+    font-size: 13px;
+}
+
+.wyy-api-info {
+    text-align: center;
+    font-size: 11px;
+    opacity: 0.15;
+    margin-top: 12px;
+    font-family: monospace;
+}

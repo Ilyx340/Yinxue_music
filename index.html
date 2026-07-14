@@ -116,6 +116,7 @@
             <div class="playlist-modal-header">
                 <h3>播放列表管理器</h3>
                 <div>
+                    <button class="wyy-search-btn" id="openWyySearchBtn">网易云搜索</button>
                     <button class="settings-btn" id="openSettingsBtn">设置</button>
                     <button class="close-playlist-modal" id="closePlaylistModalBtn">&times;</button>
                 </div>
@@ -131,6 +132,35 @@
                 <div class="marry-song-btn" id="marrySongBtn">添加《今天你要嫁给我》</div>
                 <div class="demo-song-btn" id="rainSongBtn">添加《那天下雨了》</div>
             </div>
+        </div>
+        <div id="wyySearchPanel" class="wyy-search-panel">
+            <div class="playlist-modal-header">
+                <h3>网易云音乐搜索</h3>
+                <button class="settings-back-btn" id="backFromWyySearchBtn">← 返回</button>
+            </div>
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+                <div class="wyy-api-badge" id="wyyApiBadge">
+                    <span class="wyy-dot"></span>
+                    <span id="wyyApiStatusText">检测中...</span>
+                </div>
+            </div>
+            <div class="wyy-status" id="wyyStatus">💡 搜索歌曲，点击 ➕ 添加播放</div>
+            <div class="wyy-search-box">
+                <input id="wyySearchInput" placeholder="输入歌名或歌手..." value="周杰伦" onkeydown="if(event.key==='Enter') wyySearch()" />
+                <button id="wyySearchBtn2" onclick="wyySearch()">搜索</button>
+            </div>
+            <div class="wyy-quick-tags">
+                <button onclick="wyyQuickSearch('周杰伦')">周杰伦</button>
+                <button onclick="wyyQuickSearch('林俊杰')">林俊杰</button>
+                <button onclick="wyyQuickSearch('邓紫棋')">邓紫棋</button>
+                <button onclick="wyyQuickSearch('陈奕迅')">陈奕迅</button>
+                <button onclick="wyyQuickSearch('晴天')">晴天</button>
+                <button onclick="wyyQuickSearch('孤勇者')">孤勇者</button>
+                <button onclick="wyyQuickSearch('起风了')">起风了</button>
+            </div>
+            <div id="wyyResults" class="wyy-results"></div>
+            <div id="wyyLoadMore" class="wyy-load-more hidden" onclick="wyyLoadMore()">加载更多</div>
+            <div class="wyy-api-info">接口：/search · /song/detail (批量) · /song/url/v1 · /lyric</div>
         </div>
         <div id="settingsPanel" class="settings-panel">
             <div class="playlist-modal-header">
