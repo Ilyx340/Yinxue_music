@@ -1,6 +1,6 @@
 # 🎵 YinXue Music Player
 
-一个优雅的网页音乐播放器，支持歌词动效与网易云音乐播放
+一个优雅的网页音乐播放器，支持歌词动效与网易云音乐播放，网页端仅供体验（除非你在本地运行了后端）
 
 ![Version](https://img.shields.io/badge/version-26.7.14-blue)
 ![Platform](https://img.shields.io/badge/platform-Windows-0078d7)
