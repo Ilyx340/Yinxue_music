@@ -2,7 +2,7 @@
 
 一个优雅的网页音乐播放器，支持歌词动效与网易云音乐播放，网页端仅供体验（除非你在本地运行了后端）
 
-![Version](https://img.shields.io/badge/version-26.7.14-blue)
+![Version](https://img.shields.io/badge/version-26.7.15-blue)
 ![Platform](https://img.shields.io/badge/platform-Windows-0078d7)
 ![License](https://img.shields.io/badge/license-MIT-green)
 
@@ -30,7 +30,7 @@ YinXue Music Player 是一款基于 Web 的音乐播放器，提供沉浸式的�
 - 一键添加到本地播放列表
 
 ### 📦 本地部署
-- 基于 **NeteaseCloudMusicAPI Enhanced** 后端
+- 基于 **Netease_url** 后端
 - 支持 Windows 平台本地运行
 - 提供一键安装与启动程序
 
@@ -43,10 +43,10 @@ YinXue Music Player 是一款基于 Web 的音乐播放器，提供沉浸式的�
 | 前端 | HTML5 + CSS3 + JavaScript (原生) |
 | 后端 | Node.js + Express |
 | 依赖管理 | pnpm |
-| API 服务 | NeteaseCloudMusicAPI Enhanced |
+| API 服务 | Netease_url |
 
 ### 后端项目地址
-👉 [NeteaseCloudMusicAPI Enhanced](https://github.com/neteasecloudmusicapienhanced/api-enhanced)
+👉 [Netease_url](https://github.com/Suxiaoqinx/Netease_url)
 
 ---
 
@@ -57,15 +57,14 @@ YinXue Music Player 是一款基于 Web 的音乐播放器，提供沉浸式的�
 
 ### 安装步骤
 
-1. **下载并解压** 项目压缩包到任意目录
+1. **下载安装包** 
 
-2. **安装依赖环境** 双击运行 install.exe
-- 自动检测并安装 Node.js（如未安装）
-- 自动安装 pnpm
+2. **安装依赖环境** 打开软件目录，双击运行 installer.exe
+- 自动检测并安装 python（如未安装）
 - 自动安装项目依赖
 
 3. **启动应用** 双击运行 launch.exe
-- 自动启动后端服务（端口 3000）
+- 自动启动后端服务（端口 5000）
 - 自动打开浏览器访问播放器页面
 
 
@@ -82,6 +81,10 @@ YinXue Music Player 是一款基于 Web 的音乐播放器，提供沉浸式的�
 
 ## 📋 版本历史
 
+### v26.7.15 (2026-07-15)
+- 🔧 更换成 Netease_url 后端
+- 📦 提供一键安装依赖程序 (installer.exe)
+  
 ### v26.7.14 (2026-07-14)
 - 🎉 新增网易云音乐搜索与播放支持
 - 🔧 集成 NeteaseCloudMusicAPI Enhanced 后端
@@ -94,13 +97,6 @@ YinXue Music Player 是一款基于 Web 的音乐播放器，提供沉浸式的�
 
 ---
 
-## 🔗 相关链接
-
-- [NeteaseCloudMusicAPI Enhanced](https://github.com/neteasecloudmusicapienhanced/api-enhanced) - 后端 API 服务
-- [Node.js 官网](https://nodejs.org/) - 运行环境
-- [pnpm 官网](https://pnpm.io/) - 包管理器
-
----
 
 ## 📄 许可证
 
@@ -110,7 +106,7 @@ YinXue Music Player 是一款基于 Web 的音乐播放器，提供沉浸式的�
 
 ## 💬 致谢
 
-感谢 [NeteaseCloudMusicAPI Enhanced](https://github.com/neteasecloudmusicapienhanced/api-enhanced) 项目提供的网易云音乐 API 支持。
+感谢 [NeteaseCloudMusicAPI Enhanced](https://github.com/neteasecloudmusicapienhanced/api-enhanced) 与 [Netease_url](https://github.com/Suxiaoqinx/Netease_url)项目提供的网易云音乐 API 支持。
 
 ---
 
