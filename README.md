@@ -67,6 +67,11 @@ YinXue Music Player 是一款基于 Web 的音乐播放器，提供沉浸式的�
 - 自动启动后端服务（端口 5000）
 - 自动打开浏览器访问播放器页面
 
+4.  **安装依赖请手动安装**
+   ```bash
+   pip install -r requirements.txt
+   ```
+
 
 ### 歌词标签说明
 
