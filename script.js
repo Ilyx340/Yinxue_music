@@ -1308,7 +1308,7 @@ function stopBeatAnimation() {
 // ================================================================
 //  网易云音乐 API 搜索与集成
 // ================================================================
-const WYY_API_BASE = 'http://100.115.92.205:5000'; // 本地 Python API 服务地址
+const WYY_API_BASE = 'http://localhost:5000'; // 本地 Python API 服务地址
 const WYY_PAGE_SIZE = 30;
 
 // API 路径映射（原版 Python 后端的路径）
