@@ -1,307 +1,326 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, view-fit=cover, user-scalable=no">
-    <title>YinXue Music 网页版播放器</title>
-    <link rel="stylesheet" href="style.css">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<title>YinXue Milayer · 音乐播放器</title>
+<link rel="stylesheet" href="style.css">
 </head>
 <body>
-<div class="dynamic-bg" id="dynamicBg"></div>
-<div class="orbital-auras" id="orbitalAuras">
-    <div class="glow glow-1"></div>
-    <div class="glow glow-2"></div>
-    <div class="glow glow-3"></div>
-    <div class="glow glow-4"></div>
-</div>
-<div class="bg-overlay" id="bgOverlay"></div>
-<div class="player-app" id="playerApp">
-    <div class="desktop-layout" id="desktopLayout">
-        <div class="fullscreen-glass">
-            <div class="fs-left">
-                <div class="fs-cover-img" id="fullscreenCoverTrigger"><img id="fullscreenCoverImg" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%232c2e3a' rx='8'/%3E%3Ccircle cx='50' cy='42' r='14' fill='none' stroke='%23cbbfaa' stroke-width='2.5'/%3E%3Ccircle cx='50' cy='42' r='4' fill='%23cbbfaa'/%3E%3Cpath d='M 28 65 L 28 88' stroke='%23cbbfaa' stroke-width='2.5' fill='none' stroke-linecap='round'/%3E%3Ccircle cx='28' cy='88' r='4' fill='%23cbbfaa'/%3E%3Cpath d='M 28 75 Q 28 68 40 68 L 72 68' stroke='%23cbbfaa' stroke-width='2.5' fill='none' stroke-linecap='round'/%3E%3Ccircle cx='72' cy='88' r='4' fill='%23cbbfaa'/%3E%3C/svg%3E" alt="封面"></div>
-                <div class="fs-song-meta" id="fullscreenSongInfo">
-                    <div class="fs-song-title" id="fullscreenSongTitle">暂无歌曲</div>
-                    <div class="fs-song-artist" id="fullscreenArtist">点击菜单添加</div>
+<div class="app">
+  <div class="bg-layer" id="bgLayer"></div>
+  <div class="bg-overlay"></div>
+
+  <!-- 主页 -->
+  <section class="view on" id="libView">
+    <nav class="navbar">
+      <div class="nav-left">
+        <img src="https://i0.hdslb.com/bfs/face/90762b7ced599272975cdbdbc3822998680b3737.jpg@96w_96h_1c_1s_!web-avatar.webp" class="brand-avatar" referrerpolicy="no-referrer" alt="Avatar">
+        <div class="brand-info">
+          <div class="brand-name">YinXue Milayer</div>
+          <div class="brand-sub" id="libSub">共 0 首歌曲</div>
+        </div>
+      </div>
+      <div class="nav-center">
+        <div class="nav-indicator" id="navIndicator"></div>
+        <button class="nav-tab active" data-index="0">音乐库</button>
+        <button class="nav-tab" data-index="1">设置</button>
+        <button class="nav-tab" data-index="2">关于</button>
+      </div>
+      <div class="nav-right">
+        <!-- 新增：登录按钮 -->
+        <button class="btn ghost" id="navLoginBtn">登录</button>
+        <button class="btn primary" id="openImport" style="pointer-events:auto;z-index:10;">
+          <svg class="ic" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>导入
+        </button>
+      </div>
+    </nav>
+
+    <div class="tab-viewport">
+      <div class="tab-slider" id="tabSlider">
+
+        <div class="tab-content" id="tabLib">
+          <div class="search-bar">
+            <input type="text" id="searchInput" placeholder="搜索喜欢的，享受喜欢的">
+            <button id="searchBtn">搜索</button>
+          </div>
+          <div class="search-tabs" id="searchTabs">
+            <div class="search-tab active" data-type="song">单曲</div>
+            <div class="search-tab" data-type="playlist">歌单</div>
+            <div class="search-tab" data-type="album">专辑</div>
+            <div class="search-tab" data-type="artist">歌手</div>
+          </div>
+          <div class="search-error" id="searchError"></div>
+          <div class="grid-list" id="gridList"></div>
+          <div class="empty" id="empty">
+            <svg class="ic" viewBox="0 0 24 24"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+            <p>音乐库空空如也</p><span>搜索网易云或点击右上角导入音频</span>
+          </div>
+        </div>
+
+        <!-- 设置页 -->
+        <div class="tab-content" id="tabSettings">
+          <div class="settings-layout">
+            <div class="settings-sidebar">
+              <div class="sidebar-scroll">
+                
+                <!-- 新增：网络 / 接口 -->
+                <div class="section-title">网络 / 接口</div>
+                <div class="setting-group">
+                  <div class="setting-row">
+                    <label>自定义 API 地址</label>
+                    <button class="btn ghost tiny" id="resetApiBtn" style="padding: 4px 8px; font-size: 12px;">恢复默认</button>
+                  </div>
+                  <input type="text" id="apiBaseInput" class="setting-input" placeholder="https://api.replow.org">
+                  <div style="font-size: 12px; color: var(--muted); margin-top: 4px;">修改后重新搜索或刷新页面生效</div>
                 </div>
-                <div class="fs-controls">
-                    <div class="fs-progress-area">
-                        <span class="time-current" id="fullscreenCurrentTime">0:00</span>
-                        <div class="fs-progress-bar" id="fullscreenProgressBg"><div class="fs-progress-fill" id="fullscreenProgressFill"></div><div class="fs-progress-thumb" id="fullscreenProgressThumb"></div></div>
-                        <span class="time-duration" id="fullscreenDuration">0:00</span>
-                    </div>
-                    <div class="fs-buttons">
-                        <!-- 重复按钮 SVG -->
-                        <button class="fs-btn" id="fullscreenRepeatBtn">
-                            <svg viewBox="0 0 24 24"><path d="M3 12a9 9 0 0 1 9-9 9 9 0 0 1 9 9 9 9 0 0 1-9 9" stroke="currentColor" stroke-width="2" fill="none"/><polyline points="9 15 3 21 9 21" stroke="currentColor" stroke-width="2" fill="none"/><polyline points="15 9 21 3 15 3" stroke="currentColor" stroke-width="2" fill="none"/></svg>
-                        </button>
-                        <!-- 上一首 SVG -->
-                        <button class="fs-btn" id="fullscreenPrevBtn">
-                            <svg viewBox="0 0 24 24"><polygon points="19 20 9 12 19 4 19 20" stroke="currentColor" stroke-width="2.2" fill="none"/><line x1="5" y1="19" x2="5" y2="5" stroke="currentColor" stroke-width="2.2"/></svg>
-                        </button>
-                        <!-- 播放/暂停 SVG -->
-                        <button class="fs-btn play-pause" id="fullscreenPlayPause">
-                            <svg viewBox="0 0 24 24" id="fullscreenPlayIcon"><polygon points="5 3 19 12 5 21 5 3" stroke="currentColor" stroke-width="2" fill="currentColor"/></svg>
-                        </button>
-                        <!-- 下一首 SVG -->
-                        <button class="fs-btn" id="fullscreenNextBtn">
-                            <svg viewBox="0 0 24 24"><polygon points="5 4 15 12 5 20 5 4" stroke="currentColor" stroke-width="2.2" fill="none"/><line x1="19" y1="5" x2="19" y2="19" stroke="currentColor" stroke-width="2.2"/></svg>
-                        </button>
-                        <!-- 菜单按钮 SVG -->
-                        <button class="fs-btn" id="fullscreenMenuBtn">
-                            <svg viewBox="0 0 24 24"><line x1="3" y1="6" x2="21" y2="6" stroke="currentColor" stroke-width="2.2"/><line x1="3" y1="12" x2="21" y2="12" stroke="currentColor" stroke-width="2.2"/><line x1="3" y1="18" x2="21" y2="18" stroke="currentColor" stroke-width="2.2"/></svg>
-                        </button>
-                    </div>
+
+                <div class="section-title">外观</div>
+                <div class="setting-group">
+                  <div class="bg-mode-group" id="bgModeGroup">
+                    <div class="bg-mode-indicator" id="bgModeIndicator"></div>
+                    <div class="bg-mode-btn active" data-mode="cover">跟随封面</div>
+                    <div class="bg-mode-btn" data-mode="random">随机图片</div>
+                    <div class="bg-mode-btn" data-mode="custom">自定义</div>
+                  </div>
+                  <label class="btn-upload" id="customBgLabel" style="display:none;">
+                    <svg class="ic" viewBox="0 0 24 24" style="width:16px;height:16px;"><path d="M12 5v14M5 12h14"/></svg>
+                    上传本地背景图
+                    <input type="file" id="customBgInput" accept="image/*" hidden>
+                  </label>
                 </div>
+                <div class="setting-group">
+                  <div class="color-picker" id="colorPicker">
+                    <div class="color-dot active" data-color="#ffffff" style="background:#ffffff"></div>
+                    <div class="color-dot" data-color="#ffb26b" style="background:#ffb26b"></div>
+                    <div class="color-dot" data-color="#ff6b6b" style="background:#ff6b6b"></div>
+                    <div class="color-dot" data-color="#6bffb2" style="background:#6bffb2"></div>
+                    <div class="color-dot" data-color="#6b9bff" style="background:#6b9bff"></div>
+                    <div class="color-dot" data-color="#d16bff" style="background:#d16bff"></div>
+                    <div class="extract-btn" id="extractColor" title="提取封面主题色">
+                      <svg class="ic" viewBox="0 0 24 24" style="width:16px;height:16px;"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+                    </div>
+                  </div>
+                </div>
+                <div class="setting-group">
+                  <div class="setting-row"><label>背景模糊度</label><span class="val-display" id="valBlur">50px</span></div>
+                  <input type="range" class="setting-slider" id="sliderBlur" min="0" max="200" value="50">
+                </div>
+                <div class="setting-group">
+                  <div class="setting-row"><label>黑色遮罩不透明度</label><span class="val-display" id="valDark">25%</span></div>
+                  <input type="range" class="setting-slider" id="sliderDark" min="0" max="100" value="25">
+                </div>
+
+                <div class="section-title">歌词</div>
+                <div class="setting-group">
+                  <div class="setting-row"><label>歌词 3D 倾斜效果</label>
+                    <label class="switch"><input type="checkbox" id="toggle3D" checked><span class="slider-sw"></span></label>
+                  </div>
+                </div>
+                <div class="setting-group">
+                  <div class="setting-row"><label>歌词字体大小</label><span class="val-display" id="valLyricSize">32px</span></div>
+                  <input type="range" class="setting-slider" id="sliderLyricSize" min="16" max="48" value="32">
+                </div>
+                <div class="setting-group">
+                  <div class="setting-row"><label>歌词行间距</label><span class="val-display" id="valLyricSpacing">1.5</span></div>
+                  <input type="range" class="setting-slider" id="sliderLyricSpacing" min="10" max="25" value="15">
+                </div>
+                <div class="setting-group">
+                  <div class="setting-row"><label>歌词高亮放大度</label><span class="val-display" id="valLyricScale">1.05</span></div>
+                  <input type="range" class="setting-slider" id="sliderLyricScale" min="10" max="15" value="10">
+                </div>
+              </div>
             </div>
+
+            <div class="settings-preview">
+              <div class="preview-lyrics">
+                <div class="preview-lyric-3d">
+                  <div class="preview-line">也许世界就这样</div>
+                  <div class="preview-line active">我也还在路上</div>
+                  <div class="preview-line">没有人能诉说</div>
+                  <div class="preview-line">也许我只能沉默</div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
-        <div class="fs-lyrics-separate">
-            
-            <div class="fs-lyrics-scroll" id="fullscreenLyricsScroll"><div class="fs-lyrics-list" id="fullscreenLyricsList"></div></div>
+
+        <div class="tab-content" id="tabAbout">
+          <div class="about-content">
+            <img src="https://i0.hdslb.com/bfs/face/90762b7ced599272975cdbdbc3822998680b3737.jpg@96w_96h_1c_1s_!web-avatar.webp" class="about-avatar" referrerpolicy="no-referrer" alt="Avatar">
+            <h2 class="about-name">YinXue Milayer</h2>
+            <p class="about-desc">一款视觉唯美、功能强大的本地 + 网易云音乐播放器</p>
+            <a href="http://yinxue.wuaze.com" target="_blank" class="btn ghost about-link">作者主页: yinxue.wuaze.com</a>
+          </div>
         </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- 详情页 -->
+  <section class="view" id="detailView">
+    <nav class="navbar detail-nav">
+      <div class="nav-left">
+        <button class="icon-btn" id="detailBackBtn"><svg class="ic" viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg></button>
+        <!-- 新增：详情页标题 -->
+        <div class="detail-nav-title" id="detailNavTitle"></div>
+      </div>
+      <div class="nav-right">
+        <button class="btn primary" id="detailPlayAll">
+          <svg class="ic" viewBox="0 0 24 24" style="width:16px;height:16px;margin-right:4px;"><path d="M8 5.5v13l11-6.5z" fill="currentColor"/></svg>播放全部
+        </button>
+      </div>
+    </nav>
+    <div class="detail-content">
+      <div class="detail-header">
+        <div class="detail-cover-wrap">
+           <img id="detailCover" class="detail-cover" src="" referrerpolicy="no-referrer" alt="Cover">
+        </div>
+        <div class="detail-info">
+           <h1 id="detailName" class="detail-name"></h1>
+           <p id="detailDesc" class="detail-desc"></p>
+           <div class="detail-sub" id="detailSub">0 首歌曲</div>
+        </div>
+      </div>
+      <div class="grid-list" id="detailGridList"></div>
+    </div>
+  </section>
+
+  <!-- 播放器 -->
+  <section class="view" id="playerView">
+    <div class="p-top">
+      <button class="icon-btn" id="backBtn"><svg class="ic" viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg></button>
+      <div style="display:flex;gap:8px">
+        <button class="icon-btn" id="queueBtn" title="播放队列">
+          <svg class="ic" viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h10"/></svg>
+        </button>
+        <button class="icon-btn" id="openSettingsPlayer" title="设置">
+          <svg class="ic" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        </button>
+        <button class="icon-btn" id="fsBtn" title="全屏"></button>
+      </div>
     </div>
 
-    <div class="mobile-layout" id="mobileLayout">
-        <!-- 顶部歌曲信息栏 -->
-        <div class="mobile-top-bar">
-            <div class="info-row">
-                <div class="cover-thumb" id="mobileCoverTrigger"><img id="mobileCoverImg" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%232c2e3a' rx='8'/%3E%3Ccircle cx='50' cy='42' r='14' fill='none' stroke='%23cbbfaa' stroke-width='2.5'/%3E%3Ccircle cx='50' cy='42' r='4' fill='%23cbbfaa'/%3E%3Cpath d='M 28 65 L 28 88' stroke='%23cbbfaa' stroke-width='2.5' fill='none' stroke-linecap='round'/%3E%3Ccircle cx='28' cy='88' r='4' fill='%23cbbfaa'/%3E%3Cpath d='M 28 75 Q 28 68 40 68 L 72 68' stroke='%23cbbfaa' stroke-width='2.5' fill='none' stroke-linecap='round'/%3E%3Ccircle cx='72' cy='88' r='4' fill='%23cbbfaa'/%3E%3C/svg%3E" alt="封面"></div>
-                <div class="song-info" id="mobileSongInfo">
-                    <div class="song-title-top" id="mobileSongTitle">暂无歌曲</div>
-                    <div class="song-artist-top" id="mobileArtist">点击菜单添加</div>
-                </div>
-            </div>
+    <div class="p-body">
+      <aside class="p-left">
+        <div class="cover-3d">
+          <div class="cover-card">
+            <div class="cover-img" id="coverImg"></div>
+            <div class="cover-fallback" id="coverFallback"><svg class="ic" viewBox="0 0 24 24"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg></div>
+          </div>
         </div>
-        
-        <!-- 歌词区域 -->
-        <div class="lyrics-container" id="mobileLyricsContainer"><div class="lyrics-list" id="mobileLyricsList"></div></div>
-        
-        <!-- 底部控制栏 -->
-        <div class="control-bar">
-            <div class="progress-area">
-                <span class="time-current" id="mobileCurrentTime">0:00</span>
-                <div class="progress-bar-bg" id="mobileProgressBg"><div class="progress-fill" id="mobileProgressFill"></div><div class="progress-thumb" id="mobileProgressThumb"></div></div>
-                <span class="time-duration" id="mobileDuration">0:00</span>
-            </div>
-            <div class="buttons">
-                <!-- 重复按钮 SVG -->
-                <button class="ctrl-btn" id="mobileRepeatBtn">
-                    <svg viewBox="0 0 24 24"><path d="M3 12a9 9 0 0 1 9-9 9 9 0 0 1 9 9 9 9 0 0 1-9 9" stroke="currentColor" stroke-width="2" fill="none"/><polyline points="9 15 3 21 9 21" stroke="currentColor" stroke-width="2" fill="none"/><polyline points="15 9 21 3 15 3" stroke="currentColor" stroke-width="2" fill="none"/></svg>
-                </button>
-                <!-- 上一首 SVG -->
-                <button class="ctrl-btn" id="mobilePrevBtn">
-                    <svg viewBox="0 0 24 24"><polygon points="19 20 9 12 19 4 19 20" stroke="currentColor" stroke-width="2.2" fill="none"/><line x1="5" y1="19" x2="5" y2="5" stroke="currentColor" stroke-width="2.2"/></svg>
-                </button>
-                <!-- 播放/暂停 SVG -->
-                <button class="ctrl-btn play-pause" id="mobilePlayPause">
-                    <svg viewBox="0 0 24 24" id="mobilePlayIcon"><polygon points="5 3 19 12 5 21 5 3" stroke="currentColor" stroke-width="2" fill="currentColor"/></svg>
-                </button>
-                <!-- 下一首 SVG -->
-                <button class="ctrl-btn" id="mobileNextBtn">
-                    <svg viewBox="0 0 24 24"><polygon points="5 4 15 12 5 20 5 4" stroke="currentColor" stroke-width="2.2" fill="none"/><line x1="19" y1="5" x2="19" y2="19" stroke="currentColor" stroke-width="2.2"/></svg>
-                </button>
-                <!-- 菜单按钮 SVG -->
-                <button class="ctrl-btn" id="mobileMenuBtn">
-                    <svg viewBox="0 0 24 24"><line x1="3" y1="6" x2="21" y2="6" stroke="currentColor" stroke-width="2.2"/><line x1="3" y1="12" x2="21" y2="12" stroke="currentColor" stroke-width="2.2"/><line x1="3" y1="18" x2="21" y2="18" stroke="currentColor" stroke-width="2.2"/></svg>
-                </button>
-            </div>
+        <div class="side-meta">
+          <div class="side-name" id="sideName">未播放</div>
+          <div class="side-artist" id="sideArtist">网易云音乐</div>
         </div>
+
+        <div class="side-progress">
+          <div class="progress" id="progress">
+            <div class="bar"><div class="bar-fill" id="barFill"></div><div class="bar-dot" id="barDot"></div></div>
+          </div>
+          <div class="times"><span id="curTime">0:00</span><span id="durTime">0:00</span></div>
+        </div>
+
+        <div class="side-controls">
+          <button class="icon-btn" id="modeBtn"></button>
+          <button class="icon-btn" id="prevBtn"><svg viewBox="0 0 24 24"><path d="M18 5.5v13L9.5 12z" fill="currentColor"/><rect x="5" y="5" width="2.4" height="14" rx="1.2" fill="currentColor"/></svg></button>
+          <button class="play-big" id="playBtn"></button>
+          <button class="icon-btn" id="nextBtn"><svg viewBox="0 0 24 24"><path d="M6 5.5v13L14.5 12z" fill="currentColor"/><rect x="16.6" y="5" width="2.4" height="14" rx="1.2" fill="currentColor"/></svg></button>
+          <div class="volume-wrapper">
+            <button class="icon-btn" id="muteBtn"></button>
+            <div class="vol-pop" id="volPop">
+              <input type="range" id="volRange" class="vol-slider" min="0" max="100" value="80">
+            </div>
+          </div>
+        </div>
+      </aside>
+
+      <div class="p-right" id="lyricWrap">
+        <div class="lyric-3d">
+          <div class="breath-anim" id="breathAnim"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>
+          <div class="outro-credit" id="outroCredit">歌名 - 歌手</div>
+          <div class="lyric-inner" id="lyricInner"></div>
+        </div>
+      </div>
     </div>
+  </section>
+
+  <div class="mini" id="mini">
+    <div class="mini-cover" id="miniCover"><svg class="ic" viewBox="0 0 24 24"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg></div>
+    <div class="mini-info"><div class="mini-name" id="miniName">选择一首歌</div><div class="mini-artist" id="miniArtist">—</div></div>
+    <button class="icon-btn" id="miniPlay"></button>
+    <button class="icon-btn" id="miniNext"><svg viewBox="0 0 24 24"><path d="M6 5.5v13L14.5 12z" fill="currentColor"/><rect x="16.6" y="5" width="2.4" height="14" rx="1.2" fill="currentColor"/></svg></button>
+  </div>
 </div>
 
-
-
-<div id="homePage" class="home-page">
-    <div class="home-sidebar">
-        <div class="sidebar-top">
-            <div class="sidebar-logo">YinXue<br><span>Music</span></div>
-            <button class="sidebar-item active" data-view="search">
-                <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8" stroke="currentColor" stroke-width="2" fill="none"/><line x1="21" y1="21" x2="16.65" y2="16.65" stroke="currentColor" stroke-width="2"/></svg>
-                <span>搜索</span>
-            </button>
-            <button class="sidebar-item" data-view="recommend">
-                <svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" stroke="currentColor" stroke-width="2" fill="none"/></svg>
-                <span>推荐</span>
-            </button>
-            <button class="sidebar-item" data-view="ranking">
-                <svg viewBox="0 0 24 24"><path d="M8 21V11M16 21V7M12 21V3" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
-                <span>榜单</span>
-            </button>
-            <button class="sidebar-item" data-view="settings">
-                <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2" fill="none"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
-                <span>设置</span>
-            </button>
-        </div>
-        <div class="sidebar-bottom">
-            <div class="sidebar-player" id="sidebarPlayer">
-                <div class="sidebar-player-cover" id="sidebarPlayerCover">
-                    <img src="" referrerpolicy="origin" onerror="this.style.display='none'" />
-                </div>
-                <div class="sidebar-player-info">
-                    <div class="sidebar-player-name" id="sidebarPlayerName">未播放</div>
-                    <div class="sidebar-player-artist" id="sidebarPlayerArtist"></div>
-                </div>
-                <div class="sidebar-player-controls">
-                    <button class="sidebar-player-btn" onclick="prevSong()">
-                        <svg viewBox="0 0 24 24"><polygon points="19 20 9 12 19 4 19 20" stroke="currentColor" stroke-width="2.2" fill="none"/><line x1="5" y1="19" x2="5" y2="5" stroke="currentColor" stroke-width="2.2"/></svg>
-                    </button>
-                    <button class="sidebar-player-btn play-btn" id="sidebarPlayBtn" onclick="togglePlayPause()">
-                        <svg viewBox="0 0 24 24" id="sidebarPlayIcon"><polygon points="5 3 19 12 5 21 5 3" stroke="currentColor" stroke-width="2" fill="currentColor"/></svg>
-                    </button>
-                    <button class="sidebar-player-btn" onclick="nextSong()">
-                        <svg viewBox="0 0 24 24"><polygon points="5 4 15 12 5 20 5 4" stroke="currentColor" stroke-width="2.2" fill="none"/><line x1="19" y1="5" x2="19" y2="19" stroke="currentColor" stroke-width="2.2"/></svg>
-                    </button>
-                </div>
-            </div>
-        </div>
+<!-- 播放队列抽屉 -->
+<div class="queue-mask" id="queueMask">
+  <div class="queue-drawer">
+    <div class="queue-head">
+      <h2>播放队列 (<span id="queueCount">0</span>)</h2>
+      <div style="display:flex;gap:12px;align-items:center;">
+        <button class="btn ghost tiny" id="queueClear">清空</button>
+        <button class="icon-btn" id="queueClose"><svg class="ic" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+      </div>
     </div>
-    <div class="home-main">
-        <div class="home-main-header">
-            <h2 id="homeViewTitle">搜索</h2>
-        </div>
-        <div class="home-view-content">
-            <div class="home-view active" id="viewSearch">
-                <div class="search-row">
-                    <button class="search-back-btn" id="searchBackBtn" onclick="homeBackToSearch()" title="返回搜索结果">
-                        <svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                    </button>
-                    <div class="search-box-large">
-                        <input id="homeSearchInput" placeholder="搜索歌曲、歌手..." onkeydown="if(event.key==='Enter') homeSearch()" />
-                        <button onclick="homeSearch()">
-                            <svg viewBox="0 0 24 24" width="20" height="20"><circle cx="11" cy="11" r="8" stroke="currentColor" stroke-width="2" fill="none"/><line x1="21" y1="21" x2="16.65" y2="16.65" stroke="currentColor" stroke-width="2"/></svg>
-                        </button>
-                    </div>
-                </div>
-                <div id="homeResults" class="home-results"></div>
-                <div class="home-load-more-wrap">
-                    <button class="home-load-more-btn hidden" id="homeLoadMoreBtn" onclick="homeSearchLoadMore()">加载更多</button>
-                </div>
-            </div>
-            <div class="home-view" id="viewRecommend">
-                <div class="section-block">
-                    <div class="section-title">推荐歌曲</div>
-                    <div id="homeRecommended" class="home-recommended-list"></div>
-                </div>
-                <div class="section-block">
-                    <div class="section-title">热门专辑</div>
-                    <div id="homeAlbums" class="home-album-grid"></div>
-                </div>
-                <div class="section-block">
-                    <div class="section-title">热门歌手</div>
-                    <div id="homeArtists" class="home-artist-grid"></div>
-                </div>
-            </div>
-            <div class="home-view" id="viewRanking">
-                <div class="ranking-container" id="homeRanking"></div>
-            </div>
-            <div class="home-view" id="viewLyrics">
-                <div class="lyrics-view-container">
-                    <div class="lyrics-song-list" id="lyricsSongList"></div>
-                </div>
-            </div>
-            <div class="home-view" id="viewSettings">
-                <div class="setting-group">
-                    <label>均衡器 (EQ)</label>
-                    <div class="eq-grid" id="eqGrid"></div>
-                    <div class="preset-buttons">
-                        <button class="preset-btn" data-preset="flat">复位</button>
-                        <button class="preset-btn" data-preset="pop">流行</button>
-                        <button class="preset-btn" data-preset="classical">古典</button>
-                        <button class="preset-btn" data-preset="bassBoost">低音增强</button>
-                        <button class="preset-btn" data-preset="trebleBoost">高音增强</button>
-                        <button class="preset-btn" data-preset="bassCut">低音减弱</button>
-                        <button class="preset-btn" data-preset="trebleCut">高音减弱</button>
-                        <button class="preset-btn" data-preset="guitar">吉他</button>
-                        <button class="preset-btn" data-preset="vocalClear">清澈人声</button>
-                    </div>
-                </div>
-                <div class="setting-group">
-                    <label>浅色模式</label>
-                    <div class="toggle-switch">
-                        <span>浅色主题</span>
-                        <input type="checkbox" id="lightModeToggle">
-                    </div>
-                    <small class="setting-help">提高文字可读性，全屏歌词保持深色</small>
-                </div>
-                <div class="setting-group">
-                    <label>3D 环绕</label>
-                    <div class="toggle-switch">
-                        <span>环绕效果</span>
-                        <input type="checkbox" id="surroundToggle">
-                    </div>
-                    <small class="setting-help">模拟空间感，扩展声场</small>
-                </div>
-                <div class="setting-group">
-                    <label>音量</label>
-                    <input type="range" id="volumeSlider" min="0" max="100" value="80">
-                </div>
-                <div class="setting-group">
-                    <label>歌词字体大小 (px)</label>
-                    <input type="range" id="lyricFontSize" min="12" max="32" value="18" step="1">
-                    <span id="fontSizeValue" class="range-value">18px</span>
-                </div>
-                <div class="setting-group">
-                    <label>歌词垂直偏移量 (px) 0~150</label>
-                    <input type="range" id="lyricOffset" min="0" max="150" value="80" step="1">
-                    <span id="offsetValue" class="range-value">80px</span>
-                </div>
-                <div class="setting-group">
-                    <label>动画渲染精度</label>
-                    <select id="renderQuality">
-                        <option value="high">高 (流畅光晕+全帧率)</option>
-                        <option value="medium">中 (光晕减少)</option>
-                        <option value="low">低 (节能)</option>
-                    </select>
-                </div>
-            </div>
-        </div>
-    </div>
+    <div class="queue-list" id="queueList"></div>
+  </div>
 </div>
 
-<div id="playlistManagerModal" class="playlist-modal">
-    <div class="playlist-modal-content" id="modalContent">
-        <div id="mainPanel" class="main-panel">
-            <div class="playlist-modal-header">
-                <h3>播放列表管理器</h3>
-                <div>
-                    <button class="close-playlist-modal" id="closePlaylistModalBtn">
-                        <svg viewBox="0 0 24 24"><line x1="5" y1="5" x2="19" y2="19" stroke="currentColor" stroke-width="2.2"/><line x1="19" y1="5" x2="5" y2="19" stroke="currentColor" stroke-width="2.2"/></svg>
-                    </button>
-                </div>
-            </div>
-            <div class="playlist-song-list" id="playlistModalList"></div>
-        </div>
-        <div id="wyySearchPanel" class="wyy-search-panel">
-            <div class="playlist-modal-header">
-                <h3>网易云音乐搜索</h3>
-                <button class="settings-back-btn" id="backFromWyySearchBtn">← 返回</button>
-            </div>
-            <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
-                <div class="wyy-api-badge" id="wyyApiBadge">
-                    <span class="wyy-dot"></span>
-                    <span id="wyyApiStatusText">检测中...</span>
-                </div>
-            </div>
-            <div class="wyy-status" id="wyyStatus">搜索歌曲，点击添加到播放</div>
-            <div class="wyy-search-box">
-                <input id="wyySearchInput" placeholder="输入歌名或歌手..." value="周杰伦" onkeydown="if(event.key==='Enter') wyySearch()" />
-                <button id="wyySearchBtn2" onclick="wyySearch()">搜索</button>
-            </div>
-            <div class="wyy-quick-tags">
-                <button onclick="wyyQuickSearch('周杰伦')">周杰伦</button>
-                <button onclick="wyyQuickSearch('林俊杰')">林俊杰</button>
-                <button onclick="wyyQuickSearch('邓紫棋')">邓紫棋</button>
-                <button onclick="wyyQuickSearch('陈奕迅')">陈奕迅</button>
-                <button onclick="wyyQuickSearch('晴天')">晴天</button>
-                <button onclick="wyyQuickSearch('孤勇者')">孤勇者</button>
-                <button onclick="wyyQuickSearch('起风了')">起风了</button>
-            </div>
-            <div id="wyyResults" class="wyy-results"></div>
-            <div id="wyyLoadMore" class="wyy-load-more hidden" onclick="wyyLoadMore()">加载更多</div>
-            <div class="wyy-api-info">接口：/search · /song/detail (批量) · /song/url/v1 · /lyric</div>
-        </div>
-    </div> 
+<!-- 导入弹窗 -->
+<div class="modal-mask" id="importMask">
+  <div class="modal">
+    <div class="modal-head"><h2>导入文件</h2><button class="icon-btn" id="modalClose"><svg class="ic" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
+    <div class="modal-body" id="modalBody">
+      <div class="pick-row" data-kind="audio">
+        <div class="pick-ic"><svg class="ic" viewBox="0 0 24 24"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg></div>
+        <div class="pick-info"><div class="pick-title">音频文件</div><div class="pick-desc" data-desc="audio">MP3 / FLAC / WAV / M4A…</div></div>
+        <button class="icon-btn pick-clear" data-clear="audio"><svg class="ic" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+        <button class="btn ghost tiny" data-pick="audio">选择</button>
+      </div>
+      <div class="pick-row" data-kind="lyric">
+        <div class="pick-ic"><svg class="ic" viewBox="0 0 24 24"><path d="M4 6.5h11M4 12h16M4 17.5h8"/></svg></div>
+        <div class="pick-info"><div class="pick-title">歌词文件</div><div class="pick-desc" data-desc="lyric">.lrc 歌词，同名自动匹配</div></div>
+        <button class="icon-btn pick-clear" data-clear="lyric"><svg class="ic" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+        <button class="btn ghost tiny" data-pick="lyric">选择</button>
+      </div>
+      <div class="pick-row" data-kind="cover">
+        <div class="pick-ic"><svg class="ic" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2.5"/><circle cx="8.5" cy="9.5" r="1.6"/><path d="M21 15.5l-5-5L5 20"/></svg></div>
+        <div class="pick-info"><div class="pick-title">封面图片</div><div class="pick-desc" data-desc="cover">留空则读取音频内嵌封面</div></div>
+        <button class="icon-btn pick-clear" data-clear="cover"><svg class="ic" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+        <button class="btn ghost tiny" data-pick="cover">选择</button>
+      </div>
+    </div>
+    <div class="modal-foot"><div class="modal-hint">封面未上传时，会自动从 FLAC / MP3 内嵌标签中读取</div><button class="btn ghost" id="modalCancel">取消</button><button class="btn primary" id="modalConfirm">开始导入</button></div>
+  </div>
 </div>
-<script src="script.js"></script>
+
+<!-- 扫码登录弹窗 -->
+<div class="modal-mask" id="loginMask">
+  <div class="modal" style="max-width: 360px;">
+    <div class="modal-head">
+      <h2>扫码登录网易云</h2>
+      <button class="icon-btn" id="loginClose"><svg class="ic" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+    </div>
+    <div class="modal-body" style="align-items: center; text-align: center; padding-top: 20px;">
+      <div id="qrContainer" style="width: 200px; height: 200px; background: #fff; border-radius: 12px; display: flex; align-items: center; justify-content: center; overflow: hidden; margin-bottom: 16px;">
+        <span style="color: #999; font-size: 14px;">加载中...</span>
+      </div>
+      <div id="qrStatus" style="font-size: 14px; color: var(--muted); margin-bottom: 16px;">请使用网易云音乐 App 扫描二维码</div>
+      <button class="btn primary" id="qrRefreshBtn" style="display: none;">刷新二维码</button>
+    </div>
+  </div>
+</div>
+
+<input type="file" id="audioPickInput" accept="audio/*,.mp3,.flac,.wav,.ogg,.m4a" multiple hidden>
+<input type="file" id="lyricPickInput" accept=".lrc" multiple hidden>
+<input type="file" id="coverPickInput" accept="image/*" multiple hidden>
+<input type="file" id="lyricInput" accept=".lrc" hidden>
+<input type="file" id="coverInput" accept="image/*" hidden>
+
+<audio id="audio" preload="metadata"></audio>
+
+<script src="app.js"></script>
 </body>
 </html>
